@@ -43,7 +43,7 @@ h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut
 .rt-tabs button{flex:1;background:none;border:0;border-bottom:3px solid transparent;border-radius:0;padding:10px 2px;font-weight:600;color:var(--muted);font-size:.9rem;cursor:pointer}
 .rt-tabs button.on{color:var(--fg);border-bottom-color:var(--accent)}
 #semaforo .it .m{display:none} #semaforo .it.why .m{display:block} #semaforo .it.hid{display:none}
-#semaforo .wy{font-family:inherit;font-size:.76rem;color:var(--accent);font-weight:600;background:none;border:0;padding:0 0 0 8px;cursor:pointer;white-space:nowrap}
+#semaforo .wy{font-family:inherit;font-size:1.05rem;line-height:1;color:var(--accent);font-weight:600;background:none;border:0;padding:0 0 0 8px;cursor:pointer;white-space:nowrap}
 #semaforo .it .val{display:flex;align-items:center}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
 button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:7px 12px}
@@ -1069,7 +1069,7 @@ function renderOut(K){
   // semaforo
   const sm=$('#semaforo'); sm.innerHTML=''; if(!K.gSum){ sm.innerHTML='<div class="hint">Scegli una ricetta di riferimento o aggiungi oli.</div>'; }
   else { const S=semaforo(K); const nb=S.filter(x=>x.cls==='bad').length, nw=S.filter(x=>x.cls==='warn').length; $('#sem-cnt').textContent = nb||nw? `· ${nb} rossi, ${nw} gialli` : '· tutto verde'; const green=x=>x.cls==='ok'||x.cls==='info'; const ng=S.filter(green).length;
-    S.slice().sort((a,c)=>(green(a)?1:0)-(green(c)?1:0)).forEach(x=>{ const d=document.createElement('div'); d.className='it '+x.cls+(green(x)&&!SEM_ALL?' hid':''); d.innerHTML=`<div class="dot"></div><div><div class="t">${esc(x.t)}</div><div class="m">${esc(x.m)}</div></div><div class="val">${esc(x.val)}${x.m?'<button type="button" class="wy">Perché?</button>':''}</div>`; const w=d.querySelector('.wy'); if(w) w.onclick=()=>{ d.classList.toggle('why'); w.textContent=d.classList.contains('why')?'Chiudi':'Perché?'; }; sm.appendChild(d); });
+    S.slice().sort((a,c)=>(green(a)?1:0)-(green(c)?1:0)).forEach(x=>{ const d=document.createElement('div'); d.className='it '+x.cls+(green(x)&&!SEM_ALL?' hid':''); d.innerHTML=`<div class="dot"></div><div><div class="t">${esc(x.t)}</div><div class="m">${esc(x.m)}</div></div><div class="val">${esc(x.val)}${x.m?'<button type="button" class="wy" aria-label="Spiegazione" title="Spiegazione">ⓘ</button>':''}</div>`; const w=d.querySelector('.wy'); if(w) w.onclick=()=>{ d.classList.toggle('why'); w.textContent=d.classList.contains('why')?'✕':'ⓘ'; }; sm.appendChild(d); });
     const sa=$('#sem-all'); if(sa){ sa.hidden=!ng||ng===S.length&&false; sa.textContent= SEM_ALL? 'Nascondi le voci verdi' : `Mostra anche ${ng===1?'la voce verde':'le '+ng+' voci verdi'}`; if(nb+nw===0&&!SEM_ALL) sm.insertAdjacentHTML('afterbegin','<div class="hint">Tutto nella fascia della destinazione.</div>'); } }
   // procedure
   const pr=$('#proc'); pr.innerHTML=''; let npr=0; if(K.gSum) procedura(K).forEach(s=>{ const li=document.createElement('li'); li.textContent=s; pr.appendChild(li); npr++; }); { const pc=$('#proc-cnt'); if(pc) pc.textContent= npr? '· '+npr+' passaggi' : ''; }
