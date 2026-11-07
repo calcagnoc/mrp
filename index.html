@@ -919,7 +919,7 @@ function procedura(K){
   if(aTrace.length) s.push('A trace leggera aggiungi a mano (30-60 s): '+aTrace.map(a=>a.d.nome.toLowerCase()+' '+fmt(a.g,1)+' g').join(', ')+'. Poi subito in stampo.');
   { let M=null; try{ M=lavModel(K); }catch(e){} if(M) s.push(M.passoStampo); }
   if(R.dest==='mani_inverno') s.push('Taglio a 12-24 h deciso al tatto: nessuna impronta premendo con il pollice, pane ancora sopra 25 °C; a 48 h scheggia.'); else s.push((cera||lat)? 'Taglio a 10-30 h con il test del dito (l\'angolo cede appena); guanti; con cera e cacao oltre 48 h sbriciola.' : 'Taglio a 24-48 h, guanti, lama o filo.');
-  s.push(`Cura: minimo ${rule.settMin} settimane, ottimale ${rule.settOtt}; pronto a −9/−12 % di peso e perdita < 1 % a settimana per due settimane. Controllo: pH 9,5-10,5 (pHmetro o cartina); la fenolftaleina diventa sempre rosa sul sapone, preoccupa solo un fucsia intenso e immediato.`);
+  s.push(`Cura: minimo ${rule.settMin} settimane, ottimale ${rule.settOtt}; pronto a −9/−12 % di peso e perdita < 1 % a settimana per due settimane. Controllo del pH con cartina pH-Fix 7,0-14,0 sulla soluzione all'1 %: a fine cura 9,5-10,5.`);
   return s;
 }
 
@@ -1388,7 +1388,7 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
       : `<table style="margin-top:6px"><tr><th>Superficie stampo (facoltativo)</th>${[30,60,90,120,180].map(m=>`<th>${m} min</th>`).join('')}</tr><tr><td class="small">°C con termometro a infrarossi, attraverso la pellicola, senza aprire (sopra 85: togli la coperta)</td>${[0,1,2,3,4].map(i=>`<td class="blank"><input class="fc" data-fc="${i}" inputmode="decimal" placeholder="°C"></td>`).join('')}</tr></table>`; })()}`;
   h+=`<h3>Controlli e firma</h3><table class="controlli"><tr><th>Controllo</th><th>Atteso</th><th>Reale</th></tr>
     <tr><td>Bilancia verificata (tara, peso noto)</td><td class="small">prima di pesare</td><td class="blank"><button type="button" class="fchk fxc" data-fx="bilancia">☐</button></td></tr>
-    <tr><td>pH a 48 h (cartina 7,5-14 sulla soluzione all'1 %)</td><td class="small">fino a 11 normale · sopra 11,5 troppa soda</td><td class="blank"><input class="fx" data-fx="ph48" placeholder="es. 10,2 o rosa tenue"></td></tr>
+    <tr><td>pH a 48 h (cartina pH-Fix 7,0-14,0 sulla soluzione all'1 %)</td><td class="small">fino a 11 normale · sopra 11,5 troppa soda</td><td class="blank"><input class="fx" data-fx="ph48" inputmode="decimal" placeholder="es. 10,5"></td></tr>
     <tr><td>pH a fine cura (stesso metodo)</td><td class="small">9,5-10,5</td><td class="blank"><input class="fx" data-fx="phfine" inputmode="decimal" placeholder="pH"></td></tr>
     <tr><td>Aspetto (crepe, macchie, polvere di soda)</td><td class="small">nessuno</td><td class="blank"><input class="fx" data-fx="aspetto" placeholder="es. nessuno"></td></tr>
     <tr><td>Preparato da</td><td></td><td class="blank"><input class="fx" data-fx="firma" placeholder="nome"></td></tr></table>
@@ -1398,10 +1398,10 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
         <li>A 48 h il sapone è tenero: taglia col coltello una lamella sottile e pesane <b>1 g</b> (a fine cura puoi grattugiarlo).</li>
         <li>Sbriciolalo con i guanti in <b>100 g di acqua demineralizzata</b> tiepida (30-40 °C), non quella del rubinetto.</li>
         <li>Mescola con un cucchiaino 5-10 minuti finché si scioglie quasi tutto; qualche grumo non importa.</li>
-        <li>Lascia tornare a temperatura ambiente, poi immergi la <b>cartina a scala ristretta (7,5-14, passi da 0,5)</b> per qualche secondo e confronta il colore. Mai sul pane bagnato, mai a caldo.</li>
+        <li>Lascia tornare a temperatura ambiente, poi immergi la <b>cartina Macherey-Nagel pH-Fix 7,0-14,0</b> (cod. 92120, passi da 0,5) per qualche secondo e confronta il colore con la scala della scatola. Mai sul pane bagnato, mai a caldo.</li>
         <li>Lettura: a 48 h fino a 11 è normale (la reazione sta finendo); sopra 11,5 c'è soda in eccesso. A fine cura 9,5-10,5.</li>
       </ol>
-      <div class="small"><b>Fenolftaleina:</b> sul sapone diventa sempre rosa; preoccupa solo un fucsia intenso e immediato. È sospetta cancerogena: guanti, e il pezzo testato si butta.</div></div>
+      <div class="small">Cartine chiuse, al buio e all'asciutto: con l'umidità perdono precisione. Il pezzo testato si butta.</div></div>
     <div class="small" style="margin-top:6px"><b>Soda sulla pelle o negli occhi:</b> acqua corrente abbondante per 15 minuti, niente aceto; occhi → medico.</div>`;
   const n=+$('#c-pani').value||10;
   h+=`<h3>Taglio</h3><table class="ftag fhead"><tr><td><span class="fl">Data</span><input class="ftg" data-ftg="data" type="date"></td><td><span class="fl">Ora</span><input class="ftg" data-ftg="ora" type="time"></td><td><span class="fl">Ore dalla colata</span><b id="f-ore"></b></td><td><span class="fl">Pani tagliati</span><input class="ftg" data-ftg="pani" inputmode="numeric" value="${n}"></td></tr></table>
