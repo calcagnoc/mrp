@@ -251,6 +251,10 @@ td input.gin{width:72px}
 .sheet tr.fdone td{background:none} .sheet tr.fdone td:not(.box):not(.blank){color:#8a8a8a} .sheet tr.fdone .fchk{background:#2e7d32;border-color:#2e7d32;color:#fff}
 .sheet input.fin,.sheet input.ft,.sheet input.fc,.sheet input.fm{width:100%;max-width:90px;font:inherit;font-family:var(--mono);font-size:13px;padding:5px 6px;border:1px solid #bbb;border-radius:6px;background:#fff;color:#222}
 .sheet input.fm{max-width:140px} .sheet .fmeta td{font-size:12px}
+.sheet table.ing{table-layout:fixed;width:100%} .sheet table.ing td.small{white-space:normal;word-break:break-word}
+.sheet table.ing th:nth-child(1),.sheet table.ing td:nth-child(1){width:44px} .sheet table.ing th:nth-child(3),.sheet table.ing td:nth-child(3){width:118px}
+.sheet table.ing th:nth-child(4),.sheet table.ing td:nth-child(4){width:104px} .sheet table.ing th:nth-child(5),.sheet table.ing td:nth-child(5){width:190px}
+.sheet table.ing td.blank input{max-width:100%} .sheet table.ing td.n{white-space:normal} .sheet table.ing td:nth-child(2){overflow-wrap:anywhere;white-space:normal} .sheet table.ing .lot{white-space:normal;padding-right:6px}
 .sheet .fwarn{font-size:11px;font-weight:600} .sheet .fwarn.warn{color:#9a6a00} .sheet .fwarn.bad{color:#c0392b}
 .sheet ol.proc li{cursor:pointer;padding:2px 0} .sheet ol.proc li.fdone{color:#888;text-decoration:line-through}
 .sheet .fprog{position:sticky;top:0;z-index:3;display:flex;gap:10px;align-items:center;background:#f3f7ef;border:1px solid #cfe0c3;border-radius:10px;padding:6px 8px;margin:10px 0 4px;font-size:12.5px;white-space:nowrap;overflow-x:auto}
