@@ -37,6 +37,7 @@ h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut
 .layout{display:block} .layout>.panel+.panel{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;border-top:0} .layout>#builder{border-bottom-left-radius:0;border-bottom-right-radius:0;padding-bottom:4px}
 #layout[data-rt=formula] [data-rt]:not([data-rt=formula]),#layout[data-rt=analisi] [data-rt]:not([data-rt=analisi]),#layout[data-rt=lav] [data-rt]:not([data-rt=lav]),#layout[data-rt=costi] [data-rt]:not([data-rt=costi]){display:none!important}
 #layout:not([data-rt=formula]) #verdict>h2{display:none}
+.rt-bar{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap} .rt-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .rt-head{font-size:.82rem;color:var(--muted);margin:8px 0 2px} .rt-head b{color:var(--fg);font-size:1.05rem;display:block}
 .rt-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:8px -4px 10px;position:sticky;top:0;background:var(--surface);z-index:5}
 .rt-tabs button{flex:1;background:none;border:0;border-bottom:3px solid transparent;border-radius:0;padding:10px 2px;font-weight:600;color:var(--muted);font-size:.9rem;cursor:pointer}
@@ -321,7 +322,7 @@ optgroup{font-weight:700;font-style:normal}
 </div>
 <div class="layout" id="layout" hidden>
 <div class="panel" id="builder">
-  <div class="row" style="justify-content:space-between;align-items:center"><button class="sm ghost" id="btn-back">‹ Tutte le ricette</button><span style="display:flex;gap:6px"><button class="sm" id="btn-reg2">Avvia batch</button><button class="sm primary" id="btn-save2">Salva ricetta</button></span></div>
+  <div class="rt-bar"><button class="sm ghost" id="btn-back">‹ Ricette</button><span class="rt-acts"><button class="sm" id="btn-sheet2">Foglio di pesata</button><button class="sm" id="btn-reg2">Avvia batch</button><button class="sm primary" id="btn-save2">Salva</button></span></div>
   <div class="rt-head" id="rt-head"></div>
   <div class="rt-tabs" role="tablist" id="rt-tabs"><button type="button" data-t="formula" class="on">Formula</button><button type="button" data-t="analisi">Analisi</button><button type="button" data-t="lav">Lavorazione</button><button type="button" data-t="costi">Costi</button></div>
   <h2 data-rt="formula">Ricetta</h2>
@@ -486,14 +487,14 @@ optgroup{font-weight:700;font-style:normal}
     <div id="c-fb" class="bt-acts" style="justify-content:flex-start;margin-top:6px" hidden><span class="hint">Questa risposta è</span><button class="sm" id="c-ok">Giusta</button><button class="sm" id="c-ko">Sbagliata, perché…</button></div>
     <div id="c-fbform" class="bt-form" hidden style="margin-top:6px"><label style="display:grid;gap:4px;font-size:.78rem;color:var(--muted)">Cosa c'è di sbagliato e qual è la regola giusta (una frase: diventa una lezione per il consigliere) <input id="c-fbtext" placeholder="es. il cocco al 20 % va bene per le mani normali, non proporre sempre il babassu"></label><div class="bt-acts"><button class="ghost" id="c-fbno">Annulla</button><button class="primary" id="c-fbok">Salva la lezione</button></div></div>
   </details>
-  <div class="actbar" style="margin-top:14px">
+  <div class="actbar" style="margin-top:14px" data-rt="formula">
   <div class="act-l">Questa ricetta</div>
   <div class="mg-check" id="mg-check"></div>
   <div class="row" style="justify-content:flex-end">
-    <button id="btn-sheet">Foglio di pesata</button>
-    <button id="btn-reg">Avvia batch</button>
-    <button id="btn-copy">Copia riepilogo</button>
-    <button id="btn-save" class="primary">Salva ricetta</button>
+    <button id="btn-sheet" hidden>Foglio di pesata</button>
+    <button id="btn-reg" hidden>Avvia batch</button>
+    <button id="btn-copy" hidden>Copia riepilogo</button>
+    <button id="btn-save" class="primary" hidden>Salva ricetta</button>
   </div>
   </div>
 </div>
@@ -1107,7 +1108,7 @@ function renderSaved(){ fillCmp(); const el=$('#saved'); el.innerHTML=''; if(!sa
     b.innerHTML=`<span class="rn">${esc(r.nome)}${cl?` <span class="rdt">${fmtD(cl)}</span>`:''}</span>${ce}`; b.onclick=()=>{ R=savedToR(r); $('#r-nome').value=R.nome; $('#r-dest').value=R.dest; $('#r-tot').value=R.tot; $('#r-sf').value=R.sf; $('#r-pur').value=R.pur; $('#r-conc').value=R.conc; render(); openBuilder(); };
     const x=document.createElement('button'); x.className='sm ghost rdel'; x.textContent='✕'; x.title='Elimina '+r.nome; x.onclick=async()=>{ if(x.dataset.sure!=='1'){ x.dataset.sure='1'; x.textContent='Elimina?'; setTimeout(()=>{ x.dataset.sure=''; x.textContent='✕'; },3000); return; } if(storeMode==='db'){ try{ await col.doc(r.id).delete(); toast('Eliminata'); }catch(e){ toast('Non eliminata'); } } else { saved=saved.filter(s=>s.id!==r.id); localSave(); renderSaved(); } };
     row.appendChild(b); row.appendChild(x); el.appendChild(row); }); }
-$('#btn-reg2').onclick=()=>$('#btn-reg').click(); $('#btn-save2').onclick=()=>$('#btn-save').click();
+$('#btn-reg2').onclick=()=>$('#btn-reg').click(); $('#btn-sheet2').onclick=()=>$('#btn-sheet').click(); $('#btn-save2').onclick=()=>$('#btn-save').click();
 $('#btn-save').onclick=async()=>{ if(EDIT_BATCH){ toast('Stai correggendo un batch: usa «Salva nel batch» in alto.'); return; } if(!R.nome.trim()){ toast('Dai un nome alla ricetta.'); return; } const K=calc(); if(!K.gSum){ toast('Aggiungi gli oli.'); return; }
   const nome=R.nome.trim(); const dup=saved.find(s=>s.id!==R.id&&(s.nome||'').trim().toLowerCase()===nome.toLowerCase());
   if(dup){ toast('Esiste già una ricetta con questo nome: cambia il nome per salvarne una nuova.'); $('#r-nome').focus(); return; }
