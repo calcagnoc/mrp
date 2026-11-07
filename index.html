@@ -255,6 +255,10 @@ td input.gin{width:72px}
 .sheet table.ing th:nth-child(1),.sheet table.ing td:nth-child(1){width:44px} .sheet table.ing th:nth-child(3),.sheet table.ing td:nth-child(3){width:118px}
 .sheet table.ing th:nth-child(4),.sheet table.ing td:nth-child(4){width:104px} .sheet table.ing th:nth-child(5),.sheet table.ing td:nth-child(5){width:190px}
 .sheet table.ing td.blank input{max-width:100%} .sheet table.ing td.n{white-space:normal} .sheet table.ing td:nth-child(2){overflow-wrap:anywhere;white-space:normal} .sheet table.ing .lot{white-space:normal;padding-right:6px}
+.sheet tr.fnext td:nth-child(2){box-shadow:inset 3px 0 0 var(--accent,#5b7a3e)} .sheet tr.fnext td:nth-child(2)::before{content:'prossimo ›';display:block;font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--accent,#5b7a3e);text-transform:uppercase}
+.sheet .fchk.on{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.sheet input.fx,.sheet input.ftg{width:100%;font:inherit;font-size:13px;padding:5px 6px;border:1px solid #bbb;border-radius:6px;background:#fff;color:#222;box-sizing:border-box} .sheet table.ftag td{vertical-align:top;font-size:12px}
+@media print{ .sheet tr.fnext td:nth-child(2)::before{display:none} .sheet tr.fnext td:nth-child(2){box-shadow:none} }
 .sheet .fwarn{font-size:11px;font-weight:600} .sheet .fwarn.warn{color:#9a6a00} .sheet .fwarn.bad{color:#c0392b}
 .sheet ol.proc li{cursor:pointer;padding:2px 0} .sheet ol.proc li.fdone{color:#888;text-decoration:line-through}
 .sheet .fprog{position:sticky;top:0;z-index:3;display:flex;gap:10px;align-items:center;background:#f3f7ef;border:1px solid #cfe0c3;border-radius:10px;padding:6px 8px;margin:10px 0 4px;font-size:12.5px;white-space:nowrap;overflow-x:auto}
@@ -1337,6 +1341,8 @@ $('#cmp-pick').addEventListener('change',()=>renderOut());
 // ---------- foglio di pesata ----------
 const LIQ=['macadamia','sansa_oliva','oliva_vergine','oliva_sansa','mandorle_dolci','girasole_75_oleico','riso','avocado','nocciole','albicocca_semi_armellina','cartamo_70_oleico'];
 function where(a){ const d=a.d.dove||''; if(/lisciva/i.test(d)) return 'lisciva'; if(/acqua|NaOH/i.test(d)) return 'acqua'; if(/Negli oli/i.test(d)) return 'oli'; return 'trace'; }
+const FSOL=/cera|cacao|karit|palma|cocco|babassu|mango|kokum|sal_|strutto|sego|burro|murumuru|cupua|tucuma|illipe/;
+const fOrd=o=>/^cera/.test(o.id)?0 : (FSOL.test(o.id)&&!LIQ.includes(o.id))?1 : 2;
 function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
   const liq=K.oils.filter(o=>LIQ.includes(o.id)).sort((a,b)=>b.g-a.g)[0];
   const disp=K.adds.filter(a=>(a.d.solido&&['Argilla','Polvere','Colorante'].includes(a.d.cat))||a.id==='calendula').map(a=>({a, og: a.id==='calendula'? 20 : Math.max(20, Math.round(a.g*2.5/5)*5)}));
@@ -1353,14 +1359,14 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
   <table style="margin-top:8px" class="fmeta"><tr><td style="width:33%">Data: <input class="fm" data-fm="data" type="date"></td><td style="width:33%">Lotto n.: <input class="fm" data-fm="lotto"></td><td>Stanza °C: <input class="fm" data-fm="stanza" inputmode="decimal"></td></tr></table>`;
   if(liq&&disp.length){ h+=`<h3>Prima di scaldare</h3><table class="ing">${head}`+disp.map(x=>row(`Preleva ${x.og} g di ${esc(liq.c.nome.toLowerCase())} per ${esc(x.a.d.nome.toLowerCase())}`, x.og+' g', 'dai '+fmt(liq.g,0)+' g pesati')).join('')+'</table>'; }
   h+=`<h3>1 · Fase oleosa ${T.tipo==='cera'?'(con cera: prima della lisciva, sul fuoco fino a 68-70 °C)':T.tipo==='burri'?'(burri una volta a 60-65 °C, poi giù a '+T.oli+' °C)':''}</h3><table class="ing">${head}`
-    + K.oils.map(o=>row(esc(o.c.nome), g0(o.g), '', o.id)).join('')
+    + K.oils.slice().sort((a,c)=>fOrd(a)-fOrd(c)||c.g-a.g).map(o=>row(esc(o.c.nome), g0(o.g), fOrd(o)<2? 'solido: si scioglie per primo' : '', o.id)).join('')
     + oli.map(a=>{ const d=disp.find(x=>x.a===a); return row(esc(a.d.nome), g1(a.g), d? 'disperso nei '+d.og+' g messi da parte, a '+(T.tipo==='cera'?'55-60':'45')+' °C' : 'negli oli fusi', a.id); }).join('')
     + `</table>`;
   h+=`<h3>2 · Lisciva (occhiali, guanti, all'aperto o sotto cappa)</h3><table class="ing">${head}`
     + row('Acqua demineralizzata', g1(K.acqua), 'contenitore PP o inox')
     + acq.map(a=>row(esc(a.d.nome), g1(a.g), 'sciogliere nell\'acqua prima della soda', a.id)).join('')
     + row('<b>Soda caustica NaOH</b>', '<b>'+g1(K.naoh)+'</b>', 'a pioggia, 2-3 aggiunte; colino al versamento', 'naoh')
-    + lis.map(a=>row(esc(a.d.nome), a.id==='lattato'? g1(a.g)+' polvere<br>'+g1(a.g*1.667)+' sol. 60 %' : g1(a.g), 'sotto i 65 °C', a.id)).join('')
+    + lis.map(a=>row(esc(a.d.nome), a.id==='lattato'? g1(a.g*1.667) : g1(a.g), a.id==='lattato'? 'soluzione al 60 %, sotto i 65 °C' : 'sotto i 65 °C', a.id)).join('')
     + `</table>`;
   if(tr.length){ h+=`<h3>3 · A emulsione / trace</h3><table class="ing">${head}`
     + tr.map(a=> (a.id==='oe'&&blend)? R.oe.map(o=>row('OE '+esc(oeById[o.id]?.nome||o.id), g1(R.tot*o.pct/100), 'bicchierino chiuso, a mano 30-60 s')).join('') : row(esc(a.d.nome), g1(a.g), esc(a.d.dove))).join('') + `</table>`; }
@@ -1370,18 +1376,21 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
     <tr><td>Lisciva prima di versare</td><td class="n">${T.lisc} °C</td><td class="blank"><input class="ft" data-ft="lisc" inputmode="decimal" placeholder="°C"></td><td class="blank"><span class="fora" data-fo="lisc"></span></td></tr>
     <tr><td>Emulsione stabile / trace</td><td class="small">${T.tipo==='base'?'2-5 min':'1-4 min'}</td><td class="blank"><span class="fmin" id="f-min"></span><span class="noprint"><button type="button" class="sm" id="f-unisci">Unisco ora</button> <button type="button" class="sm" id="f-trace">Trace!</button></span></td><td class="blank"><span class="fora" data-fo="unione"></span></td></tr>
     <tr><td>In stampo</td><td></td><td></td><td class="blank"><span class="fora" data-fo="stampo"></span> <button type="button" class="sm noprint" id="f-stampo">Versato ora</button></td></tr></table>
-    <table style="margin-top:6px"><tr><th>Cuore stampo</th>${[30,60,90,120,180].map(m=>`<th>${m} min</th>`).join('')}</tr><tr><td class="small">°C (sopra 85: fresco/ventilatore)</td>${[0,1,2,3,4].map(i=>`<td class="blank"><input class="fc" data-fc="${i}" inputmode="decimal" placeholder="°C"></td>`).join('')}</tr></table>`;
+    ${(()=>{ let sw=false; try{ const M=lavModel(K,R); sw=M.cls===0&&!R.oli.some(o=>/^cera/.test(o.id)); }catch(e){}
+      return sw? `<div class="small" style="margin-top:6px"><b>Swirl in freezer:</b> niente misura al cuore dello stampo, non aprire e non bucare. Si controlla al taglio: se c'è un anello più scuro, il gel è partito.</div>`
+      : `<table style="margin-top:6px"><tr><th>Superficie stampo (facoltativo)</th>${[30,60,90,120,180].map(m=>`<th>${m} min</th>`).join('')}</tr><tr><td class="small">°C con termometro a infrarossi, attraverso la pellicola, senza aprire (sopra 85: togli la coperta)</td>${[0,1,2,3,4].map(i=>`<td class="blank"><input class="fc" data-fc="${i}" inputmode="decimal" placeholder="°C"></td>`).join('')}</tr></table>`; })()}`;
   h+=`<h3>Controlli e firma</h3><table class="controlli"><tr><th>Controllo</th><th>Atteso</th><th>Reale</th></tr>
-    <tr><td>pH a 48 h (fenolftaleina o pHmetro al 10 %)</td><td class="small">nessun rosa / 9,5-10,5</td><td class="blank"></td></tr>
-    <tr><td>pH a fine cura</td><td class="small">9,5-10,5</td><td class="blank"></td></tr>
-    <tr><td>Aspetto (crepe, macchie, polvere di soda)</td><td class="small">nessuno</td><td class="blank"></td></tr>
-    <tr><td>Bilancia verificata (tara, peso noto)</td><td class="small">☐</td><td class="blank"></td></tr>
-    <tr><td>Preparato da (firma)</td><td></td><td class="blank"></td></tr></table>
+    <tr><td>Bilancia verificata (tara, peso noto)</td><td class="small">prima di pesare</td><td class="blank"><button type="button" class="fchk fxc" data-fx="bilancia">☐</button></td></tr>
+    <tr><td>pH a 48 h (fenolftaleina o pHmetro al 10 %)</td><td class="small">nessun rosa / 9,5-10,5</td><td class="blank"><input class="fx" data-fx="ph48" placeholder="es. 10,2 o nessun rosa"></td></tr>
+    <tr><td>pH a fine cura</td><td class="small">9,5-10,5</td><td class="blank"><input class="fx" data-fx="phfine" inputmode="decimal" placeholder="pH"></td></tr>
+    <tr><td>Aspetto (crepe, macchie, polvere di soda)</td><td class="small">nessuno</td><td class="blank"><input class="fx" data-fx="aspetto" placeholder="es. nessuno"></td></tr>
+    <tr><td>Preparato da</td><td></td><td class="blank"><input class="fx" data-fx="firma" placeholder="nome"></td></tr></table>
     <div class="small" style="margin-top:6px"><b>Soda sulla pelle o negli occhi:</b> acqua corrente abbondante per 15 minuti, niente aceto; occhi → medico.</div>`;
   const n=+$('#c-pani').value||10;
-  h+=`<h3>Taglio</h3><table><tr><td style="width:50%">Data e ora: </td><td>Ore dalla colata: </td></tr></table>
-    <table style="margin-top:6px"><tr>${Array.from({length:Math.min(n,10)},(_, i)=>`<th>Pane ${i+1}</th>`).join('')}</tr><tr>${Array.from({length:Math.min(n,10)},()=>'<td style="height:24px"></td>').join('')}</tr></table>
-    <div class="small" style="margin-top:4px">Pesi al taglio in grammi (0,01 g): li inserisci nella scheda Batch. Cura minima ${rule.settMin} settimane.</div>`;
+  h+=`<h3>Taglio</h3><table class="ftag"><tr><td>Data <input class="ftg" data-ftg="data" type="date"></td><td>Ora <input class="ftg" data-ftg="ora" type="time"></td><td>Ore dalla colata: <b id="f-ore"></b></td><td>Pani tagliati <input class="ftg" data-ftg="pani" inputmode="numeric" value="${n}"></td></tr></table>
+    <table style="margin-top:6px" class="ftag"><tr>${[1,2,3,4].map(i=>`<th>Pane ${i} (g)</th>`).join('')}</tr><tr>${[0,1,2,3].map(i=>`<td><input class="ftg" data-ftg="p${i}" inputmode="decimal" placeholder="0,01 g"></td>`).join('')}</tr></table>
+    <div class="small" style="margin-top:4px">Pesa 4 pani campione (sempre gli stessi, segnali): servono per seguire la cura. Cura minima ${rule.settMin} settimane.</div>
+    <div class="noprint" style="margin-top:6px"><button type="button" class="sm" id="f-tsave">Salva il taglio nel batch</button> <span class="small" id="f-tmsg"></span></div>`;
   h+=`<h3>Note</h3>`+'<div class="lines"></div>'.repeat(4)
     +`<div class="small" style="margin-top:10px">Generato con MRP SOAP il ${new Date().toLocaleDateString('it-IT')}. NaOH ${fmt(K.naohTeo,2)} g teorici × ${(1-R.sf/100).toFixed(2)}${K.comp?' + '+fmt(K.comp,2)+' g per il citrico':''}.</div>`;
   return h; }
@@ -1394,19 +1403,19 @@ function fSave(){ FST.agg=new Date().toISOString(); try{ localStorage.setItem(fK
 const hhmm=d=>new Date(d).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
 function fWarn(tr){ const k=tr.dataset.fk, d=+tr.dataset.dose, w=tr.querySelector('.fwarn'); const v=fnum(FST.pesi[k]); w.textContent=''; w.className='fwarn'; if(isNaN(v)||!d) return;
   const diff=v-d; if(k==='naoh'){ const K=calc(); const pur=(+R.pur||100)/100; const sfE=(1-((v*pur)-(K.comp||0))/K.naohTeo)*100; if(Math.abs(diff)>=0.3){ w.textContent=`${diff>0?'+':'−'}${fmt(Math.abs(diff),1)} g di soda → superfat effettivo ${fmt(sfE,1)} % (ricetta ${fmt(R.sf)} %)`; w.className='fwarn '+(Math.abs(sfE-R.sf)>=1?'bad':'warn'); } return; }
-  if(k==='lattato') return; const rel=Math.abs(diff)/d; if(rel>0.02&&Math.abs(diff)>=0.5){ w.textContent=`${diff>0?'+':'−'}${fmt(Math.abs(diff),1)} g (${diff>0?'+':'−'}${fmt(rel*100,0)} %)`; w.className='fwarn '+(rel>0.05?'bad':'warn'); } }
+  const rel=Math.abs(diff)/d; if(rel>0.02&&Math.abs(diff)>=0.5){ w.textContent=`${diff>0?'+':'−'}${fmt(Math.abs(diff),1)} g (${diff>0?'+':'−'}${fmt(rel*100,0)} %)`; w.className='fwarn '+(rel>0.05?'bad':'warn'); } }
 function fProg(){ const el=$('#f-prog'); if(!el) return; const rows=[...document.querySelectorAll('#sheet tr[data-fk]')], st=[...document.querySelectorAll('#sheet li[data-fs]')];
   const nd=rows.filter(r=>FST.done[r.dataset.fk]).length, ns=st.filter(l=>FST.steps[l.dataset.fs]).length;
-  el.innerHTML=`<span><b>${nd}/${rows.length}</b> pesati</span><span><b>${ns}/${st.length}</b> passaggi</span>${FST.tt&&FST.t0?`<span>trace <b>${fmt((FST.tt-FST.t0)/60000,1)} min</b></span>`:''}<button type="button" class="sm ghost" id="f-reset">Azzera</button>`;
+  el.innerHTML=`<span><b>${nd}/${rows.length}</b> pesati</span><span><b>${ns}/${st.length}</b> passaggi</span>${FST.tt&&FST.t0?`<span>trace <b>${fmt((FST.tt-FST.t0)/60000,1)} min</b></span>`:''}${FST.bid?(()=>{ const bt=(typeof BATCHES!=='undefined'?BATCHES:[]).find(x=>x.id===FST.bid); return bt?`<span>batch <b>${esc(bt.nome)}</b></span>`:''; })():''}<button type="button" class="sm ghost" id="f-reset">Azzera</button>`;
   $('#f-reset').onclick=()=>{ if(!confirmTwice($('#f-reset'))) return; try{ localStorage.removeItem(fKey()); }catch(e){} fLoad(); $('#sheet').innerHTML=foglio(); fWire(); }; }
 function confirmTwice(btn){ if(btn.dataset.sure==='1') return true; btn.dataset.sure='1'; btn.textContent='Sicuro?'; setTimeout(()=>{ if(btn.isConnected){ btn.dataset.sure=''; btn.textContent='Azzera'; } },3000); return false; }
 function fMin(){ const m=$('#f-min'); if(!m) return; m.textContent= FST.t0&&FST.tt? fmt((FST.tt-FST.t0)/60000,1)+' min ' : FST.t0? 'in corso… ' : ''; document.querySelectorAll('#sheet [data-fo]').forEach(s=>{ const k=s.dataset.fo; s.textContent= k==='unione'? (FST.t0? hhmm(FST.t0)+(FST.tt?' → '+hhmm(FST.tt):'') : '') : (FST.ore[k]? hhmm(FST.ore[k]) : ''); }); }
 function fWire(){ const S=$('#sheet');
   S.querySelectorAll('tr[data-fk]').forEach(tr=>{ const k=tr.dataset.fk, bt=tr.querySelector('.fchk'), inp=tr.querySelector('.fin');
     const paint=()=>{ const on=!!FST.done[k]; tr.classList.toggle('fdone',on); bt.textContent=on?'✓':'☐'; };
-    bt.onclick=()=>{ FST.done[k]=!FST.done[k]; fSave(); paint(); fProg(); };
+    bt.onclick=()=>{ FST.done[k]=!FST.done[k]; fSave(); paint(); fProg(); fNext(); };
     if(FST.pesi[k]!=null) inp.value=FST.pesi[k];
-    inp.oninput=()=>{ FST.pesi[k]=inp.value.trim(); if(inp.value.trim()&&!FST.done[k]){ FST.done[k]=true; paint(); fProg(); } fSave(); fWarn(tr); };
+    inp.oninput=()=>{ FST.pesi[k]=inp.value.trim(); if(inp.value.trim()&&!FST.done[k]){ FST.done[k]=true; paint(); fProg(); fNext(); } fSave(); fWarn(tr); };
     paint(); fWarn(tr); });
   S.querySelectorAll('li[data-fs]').forEach(li=>{ const i=li.dataset.fs; li.classList.toggle('fdone',!!FST.steps[i]); li.onclick=()=>{ FST.steps[i]=!FST.steps[i]; li.classList.toggle('fdone',!!FST.steps[i]); fSave(); fProg(); }; });
   S.querySelectorAll('input.ft').forEach(i=>{ const k=i.dataset.ft; if(FST.t[k]!=null) i.value=FST.t[k]; i.oninput=()=>{ FST.t[k]=i.value.trim(); if(i.value.trim()) FST.ore[k]=FST.ore[k]||Date.now(); fSave(); fMin(); }; });
@@ -1416,14 +1425,28 @@ function fWire(){ const S=$('#sheet');
   if(u) u.onclick=()=>{ FST.t0=Date.now(); FST.tt=null; fSave(); fMin(); fProg(); toast('Cronometro partito: premi «Trace!» quando arriva'); };
   if(t) t.onclick=()=>{ if(!FST.t0){ toast('Prima premi «Unisco ora».'); return; } FST.tt=Date.now(); fSave(); fMin(); fProg(); };
   if(s) s.onclick=()=>{ FST.ore.stampo=Date.now(); fSave(); fMin(); };
+  S.querySelectorAll('input.fx').forEach(i=>{ const k=i.dataset.fx; FST.ctrl=FST.ctrl||{}; if(FST.ctrl[k]!=null) i.value=FST.ctrl[k]; i.oninput=()=>{ FST.ctrl[k]=i.value.trim(); fSave(); fBatchSync(); }; });
+  S.querySelectorAll('button.fxc').forEach(bt=>{ const k=bt.dataset.fx; FST.ctrl=FST.ctrl||{}; const paint=()=>{ const on=!!FST.ctrl[k]; bt.textContent=on?'✓':'☐'; bt.classList.toggle('on',on); }; bt.onclick=()=>{ FST.ctrl[k]=!FST.ctrl[k]; fSave(); paint(); fBatchSync(); }; paint(); });
+  S.querySelectorAll('input.ftg').forEach(i=>{ const k=i.dataset.ftg; FST.tg=FST.tg||{}; if(FST.tg[k]!=null) i.value=FST.tg[k]; i.oninput=()=>{ FST.tg[k]=i.value.trim(); fSave(); fOre(); }; });
+  const ts=$('#f-tsave'); if(ts) ts.onclick=fSalvaTaglio; fOre(); fNext();
   fMin(); fProg(); }
+function fNext(){ const rows=[...document.querySelectorAll('#sheet tr[data-fk]')]; rows.forEach(r=>r.classList.remove('fnext')); const nx=rows.find(r=>!FST.done[r.dataset.fk]); if(nx) nx.classList.add('fnext'); }
+function fOre(){ const el=$('#f-ore'); if(!el) return; const tg=FST.tg||{}; const t0=FST.ore&&FST.ore.stampo? FST.ore.stampo : (FST.meta&&FST.meta.data? new Date(FST.meta.data+'T12:00:00').getTime() : null);
+  if(!t0||!tg.data){ el.textContent='—'; return; } const t1=new Date(tg.data+'T'+(tg.ora||'12:00')+':00').getTime(); el.textContent= isNaN(t1)? '—' : fmt(Math.max(0,(t1-t0)/3600000),0)+' h'+(FST.ore&&FST.ore.stampo?'':' (circa: segna «Versato ora»)'); }
+async function fSalvaTaglio(){ const m=$('#f-tmsg'); const tg=FST.tg||{}; const pesi=[0,1,2,3].map(i=>fnum(tg['p'+i])).filter(x=>!isNaN(x)&&x>0);
+  const bt=FST.bid&&BATCHES.find(x=>x.id===FST.bid); if(!bt){ m.textContent='Prima avvia il batch da questo foglio.'; return; }
+  if(bt.dataTaglio){ m.textContent='Il taglio è già registrato nel batch «'+bt.nome+'»: si corregge dalla scheda Batch.'; return; }
+  if(!pesi.length){ m.textContent='Inserisci almeno un peso.'; return; } const data=tg.data||todayISO();
+  await bRun(()=>saveB(bt.id,{...noId(bt), dataTaglio:data, pesiTaglio:pesi, pani:+tg.pani||bt.pani||10}),'Taglio salvato nel batch'); m.textContent='Salvato nel batch «'+bt.nome+'».'; }
+function fBatchSync(){ if(!FST.bid) return; clearTimeout(fBatchSync.t); fBatchSync.t=setTimeout(async()=>{ const bt=BATCHES.find(x=>x.id===FST.bid); if(!bt) return; const lav={...(bt.lav||{}), ctrl:{...(FST.ctrl||{})}}; try{ await saveB(bt.id,{...noId(bt), lav}); }catch(e){} },1500); }
 function fRiassunto(){ if(!FST) return null; const K=calc(); const L={};
   const pesi={}; document.querySelectorAll('#sheet tr[data-fk]').forEach(tr=>{ const v=fnum(FST.pesi[tr.dataset.fk]); if(!isNaN(v)) pesi[tr.dataset.fk]={dose:+tr.dataset.dose||null, reale:v}; });
   const n=x=>{ const v=fnum(x); return isNaN(v)?null:v; };
   L.pesi=pesi; L.oli=n(FST.t.oli); L.lisc=n(FST.t.lisc); L.stanza=n(FST.meta.stanza); L.lotto=FST.meta.lotto||'';
   L.minTrace= FST.t0&&FST.tt? Math.round((FST.tt-FST.t0)/6000)/10 : null; L.cuore=[30,60,90,120,180].map((m,i)=>({min:m,c:n(FST.cuore[i])})).filter(x=>x.c!=null);
   if(pesi.naoh){ const pur=(+R.pur||100)/100; L.sfEff=Math.round((1-((pesi.naoh.reale*pur)-(K.comp||0))/K.naohTeo)*1000)/10; }
-  const vuoto=!Object.keys(pesi).length&&L.oli==null&&L.lisc==null&&L.minTrace==null&&!L.cuore.length; return vuoto? null : L; }
+  if(FST.ctrl&&Object.values(FST.ctrl).some(v=>v)) L.ctrl={...FST.ctrl};
+  const vuoto=!Object.keys(pesi).length&&!L.ctrl&&L.oli==null&&L.lisc==null&&L.minTrace==null&&!L.cuore.length; return vuoto? null : L; }
 let dlNs=null; (async()=>{ try{ dlNs=await claude.use('downloads'); }catch(e){ dlNs=null; } if(dlNs) $('#sh-dl').hidden=false; })();
 $('#btn-sheet').onclick=()=>{ if(!calc().gSum){ toast('Aggiungi gli oli.'); return; } fLoad(); $('#sheet').innerHTML=foglio(); fWire(); $('#sheet-ov').hidden=false; window.scrollTo(0,0); };
 $('#sh-close').onclick=()=>{ $('#sheet-ov').hidden=true; };
@@ -1435,12 +1458,12 @@ $('#sh-dl').onclick=async()=>{ if(!dlNs) return; const css=[...document.styleShe
 
 // ---------- avvia batch nel Registro ----------
 function regPayload(){ const K=calc(), rule=RULES[R.dest]; const blend=(R.oe||[]).length;
-  const additivi=K.adds.filter(a=>!(a.id==='oe'&&blend)).map(a=>({nome:a.d.nome, pct:fmt(a.pct,1), g: a.id==='lattato'? fmt(a.g,1)+' (polvere) / '+fmt(a.g*1.667,1)+' (sol. 60 %)' : fmt(a.g,1), quando:a.d.dove}));
+  const additivi=K.adds.filter(a=>!(a.id==='oe'&&blend)).map(a=>({nome:a.d.nome, pct:fmt(a.pct,1), g: a.id==='lattato'? fmt(a.g*1.667,1)+' (sol. 60 %)' : fmt(a.g,1), quando:a.d.dove}));
   if(blend) additivi.push({nome:'Oli essenziali: '+R.oe.map(o=>(oeById[o.id]?.nome||o.id)+' '+fmt(R.tot*o.pct/100,1)+' g').join(' · '), pct:fmt(R.oe.reduce((s,o)=>s+o.pct,0),1), g:fmt(R.oe.reduce((s,o)=>s+R.tot*o.pct/100,0),1), quando:'A emulsione stabile, a mano'});
   const lat=K.adds.find(a=>a.id==='lattato');
   return {v:1, tipo:'formulatore-batch', nome:R.nome||'Ricetta', settMin:rule.settMin,
     ricettaDati:{id:'f_'+(R.nome||'ricetta').toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,30), label:(R.nome||'Ricetta')+' (Formulatore)', titolo:R.nome||'Ricetta', superfat:R.sf, naoh:+K.naoh.toFixed(1), acqua:+K.acqua.toFixed(1),
-      lattato: lat? fmt(lat.g,1)+' g in polvere oppure '+fmt(lat.g*1.667,1)+' g di soluzione al 60 %' : '', oliTot:Math.round(K.gSum),
+      lattato: lat? fmt(lat.g*1.667,1)+' g di soluzione al 60 %' : '', oliTot:Math.round(K.gSum),
       oli:K.oils.map(o=>({nome:o.c.nome, g:Math.round(o.g), pct:o.pct})), additivi,
       profilo:{SAT:+K.grp.SAT.toFixed(1), MUFA:+K.grp.MUFA.toFixed(1), PUFA:+K.grp.PUFA.toFixed(1), RIC:+K.grp.RIC.toFixed(1), LAU:+(K.prof.C12||0).toFixed(1)},
       settMin:rule.settMin, settOtt:rule.settOtt}}; }
@@ -1456,7 +1479,7 @@ $('#ab-go').onclick=async()=>{ const nome=$('#ab-nome').value.trim(); if(!nome){
   const body={nome, dataColata:$('#ab-data').value||todayISO(), dataTaglio:null, pesiTaglio:[], pani:R.pani||10, lossMin:9, lossMax:12, settMin:rule.settMin,
     note:$('#ab-note').value.trim(), pesate:[], creato:new Date().toISOString(), rForm:snapR(R), ricettaDati:cardFor(R), rid:R.id||null};
   { if(!FST||fKey()!==('mrp-foglio:'+(R.id||slug(R.nome)||'nuova'))) fLoad(); const L=(()=>{ const ov=$('#sheet'); if(!ov.innerHTML){ ov.innerHTML=foglio(); } return fRiassunto(); })(); if(L) body.lav=L; }
-  await bRun(()=>saveB(id,body),'Batch creato'); $('#reg-ov').hidden=true; showTab('batch'); };
+  await bRun(()=>saveB(id,body),'Batch creato'); if(body.lav&&FST){ FST.bid=id; fSave(); } $('#reg-ov').hidden=true; showTab('batch'); };
 
 // ---------- acquisti ----------
 let ORD=[], ordCol=null, LANDED={}, IMB={}, ATT=[], editId=null; const LSO='formulatore-acquisti-v1';
@@ -1758,8 +1781,9 @@ function analyse(b){ const w0=avg(b.pesiTaglio); const pes=[...(b.pesate||[])].s
 
 function lavTxt(L){ const p=[]; if(L.oli!=null) p.push('oli '+fmt(L.oli,0)+' °C'); if(L.lisc!=null) p.push('lisciva '+fmt(L.lisc,0)+' °C'); if(L.stanza!=null) p.push('stanza '+fmt(L.stanza,0)+' °C'); if(L.minTrace!=null) p.push('trace dopo '+fmt(L.minTrace,1)+' min');
   if(L.cuore&&L.cuore.length) p.push('cuore stampo '+L.cuore.map(x=>x.min+'′ '+fmt(x.c,0)+' °C').join(', '));
-  const sc=Object.entries(L.pesi||{}).filter(([k,v])=>v.dose&&Math.abs(v.reale-v.dose)/v.dose>0.02&&Math.abs(v.reale-v.dose)>=0.5&&k!=='lattato').map(([k,v])=>keyName(k)+' '+(v.reale>v.dose?'+':'−')+fmt(Math.abs(v.reale-v.dose),1)+' g');
+  const sc=Object.entries(L.pesi||{}).filter(([k,v])=>v.dose&&Math.abs(v.reale-v.dose)/v.dose>0.02&&Math.abs(v.reale-v.dose)>=0.5).map(([k,v])=>keyName(k)+' '+(v.reale>v.dose?'+':'−')+fmt(Math.abs(v.reale-v.dose),1)+' g');
   if(L.sfEff!=null) p.push('superfat effettivo '+fmt(L.sfEff,1)+' %'); if(sc.length) p.push('scarti: '+sc.join(', ')); const np=Object.keys(L.pesi||{}).length; if(np) p.push(np+' pesate registrate');
+  const c=L.ctrl||{}; if(c.bilancia) p.push('bilancia verificata'); if(c.ph48) p.push('pH 48 h '+c.ph48); if(c.phfine) p.push('pH fine cura '+c.phfine); if(c.aspetto) p.push('aspetto: '+c.aspetto); if(c.firma) p.push('preparato da '+c.firma);
   return p.join(' · ')||'nessun dato'; }
 function bLavReg(b){ return b.lav? `<div class="hint keep" style="margin-top:6px"><b>Lavorazione registrata:</b> ${esc(lavTxt(b.lav))}</div>` : ''; }
 const pzg=a=>`<span class="pzg">${a.map(v=>`<span>${v}</span>`).join('')}</span>`;
