@@ -918,7 +918,7 @@ function procedura(K){
   if(aTrace.length) s.push('A trace leggera aggiungi a mano (30-60 s): '+aTrace.map(a=>a.d.nome.toLowerCase()+' '+fmt(a.g,1)+' g').join(', ')+'. Poi subito in stampo.');
   { let M=null; try{ M=lavModel(K); }catch(e){} if(M) s.push(M.passoStampo); }
   if(R.dest==='mani_inverno') s.push('Taglio a 12-24 h deciso al tatto: nessuna impronta premendo con il pollice, pane ancora sopra 25 °C; a 48 h scheggia.'); else s.push((cera||lat)? 'Taglio a 10-30 h con il test del dito (l\'angolo cede appena); guanti; con cera e cacao oltre 48 h sbriciola.' : 'Taglio a 24-48 h, guanti, lama o filo.');
-  s.push(`Cura: minimo ${rule.settMin} settimane, ottimale ${rule.settOtt}; pronto a −9/−12 % di peso e perdita < 1 % a settimana per due settimane. Controllo con fenolftaleina o pHmetro (9,5-10,5 al 10 %).`);
+  s.push(`Cura: minimo ${rule.settMin} settimane, ottimale ${rule.settOtt}; pronto a −9/−12 % di peso e perdita < 1 % a settimana per due settimane. Controllo: pH 9,5-10,5 (pHmetro o cartina); la fenolftaleina diventa sempre rosa sul sapone, preoccupa solo un fucsia intenso e immediato.`);
   return s;
 }
 
@@ -1387,7 +1387,7 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
       : `<table style="margin-top:6px"><tr><th>Superficie stampo (facoltativo)</th>${[30,60,90,120,180].map(m=>`<th>${m} min</th>`).join('')}</tr><tr><td class="small">°C con termometro a infrarossi, attraverso la pellicola, senza aprire (sopra 85: togli la coperta)</td>${[0,1,2,3,4].map(i=>`<td class="blank"><input class="fc" data-fc="${i}" inputmode="decimal" placeholder="°C"></td>`).join('')}</tr></table>`; })()}`;
   h+=`<h3>Controlli e firma</h3><table class="controlli"><tr><th>Controllo</th><th>Atteso</th><th>Reale</th></tr>
     <tr><td>Bilancia verificata (tara, peso noto)</td><td class="small">prima di pesare</td><td class="blank"><button type="button" class="fchk fxc" data-fx="bilancia">☐</button></td></tr>
-    <tr><td>pH a 48 h (fenolftaleina o pHmetro al 10 %)</td><td class="small">nessun rosa / 9,5-10,5</td><td class="blank"><input class="fx" data-fx="ph48" placeholder="es. 10,2 o nessun rosa"></td></tr>
+    <tr><td>pH a 48 h (pHmetro o cartina sull'1 %; fenolftaleina solo come allarme)</td><td class="small">pH 9,5-10,5 · fenolftaleina: rosa tenue normale, fucsia intenso = soda in eccesso</td><td class="blank"><input class="fx" data-fx="ph48" placeholder="es. 10,2 o rosa tenue"></td></tr>
     <tr><td>pH a fine cura</td><td class="small">9,5-10,5</td><td class="blank"><input class="fx" data-fx="phfine" inputmode="decimal" placeholder="pH"></td></tr>
     <tr><td>Aspetto (crepe, macchie, polvere di soda)</td><td class="small">nessuno</td><td class="blank"><input class="fx" data-fx="aspetto" placeholder="es. nessuno"></td></tr>
     <tr><td>Preparato da</td><td></td><td class="blank"><input class="fx" data-fx="firma" placeholder="nome"></td></tr></table>
