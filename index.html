@@ -37,13 +37,15 @@ h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut
 .layout{display:block} .layout>.panel+.panel{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;border-top:0} .layout>#builder{border-bottom-left-radius:0;border-bottom-right-radius:0;padding-bottom:4px}
 #layout[data-rt=formula] [data-rt]:not([data-rt=formula]),#layout[data-rt=analisi] [data-rt]:not([data-rt=analisi]),#layout[data-rt=lav] [data-rt]:not([data-rt=lav]),#layout[data-rt=costi] [data-rt]:not([data-rt=costi]){display:none!important}
 #layout:not([data-rt=formula]) #verdict>h2{display:none}
+.tipb{display:inline-block;background:none;border:0;padding:2px 4px;margin:4px 0 0;font-size:1.05rem;line-height:1;color:var(--bad);cursor:pointer;font-family:inherit} div.hint.tip-h{display:none} div.hint.tip-h.tip-o{display:block}
+@media print{.tipb{display:none} div.hint.tip-h{display:block}}
 .rt-bar{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap} .rt-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .rt-head{font-size:.82rem;color:var(--muted);margin:8px 0 2px} .rt-head b{color:var(--fg);font-size:1.05rem;display:block}
 .rt-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:8px -4px 10px;position:sticky;top:0;background:var(--surface);z-index:5}
 .rt-tabs button{flex:1;background:none;border:0;border-bottom:3px solid transparent;border-radius:0;padding:10px 2px;font-weight:600;color:var(--muted);font-size:.9rem;cursor:pointer}
 .rt-tabs button.on{color:var(--fg);border-bottom-color:var(--accent)}
 #semaforo .it .m{display:none} #semaforo .it.why .m{display:block} #semaforo .it.hid{display:none}
-#semaforo .wy{font-family:inherit;font-size:1.05rem;line-height:1;color:var(--accent);font-weight:600;background:none;border:0;padding:0 0 0 8px;cursor:pointer;white-space:nowrap}
+#semaforo .wy{font-family:inherit;font-size:1.05rem;line-height:1;color:var(--bad)!important;color:var(--accent);font-weight:600;background:none;border:0;padding:0 0 0 8px;cursor:pointer;white-space:nowrap}
 #semaforo .it .val{display:flex;align-items:center}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
 button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:7px 12px}
@@ -1704,7 +1706,7 @@ function bChart(a){ const W=640,H=200,L=46,Rr=12,T=14,B=28; const xs=[0]; a.rows
   return s+`<text x="${W-Rr}" y="${Y(a.target[1])-4}" font-size="14" fill="var(--ok)" text-anchor="end">fascia pronto</text></svg>`; }
 function bRecipe(r){ return `<div class="bt-rec"><div class="bt-kv"><span>NaOH <b>${fmt(r.naoh)} g</b></span><span>Acqua <b>${fmt(r.acqua)} g</b></span><span>Superfat <b>${r.superfat} %</b></span>${r.lattato?`<span>Lattato <b>${esc(r.lattato)}</b></span>`:''}</div>
   <div class="g2"><div><h4>Oli (${r.oliTot||700} g)</h4><ul>${r.oli.map(o=>`<li><span>${esc(o.nome)}</span><span>${o.g} g · ${o.pct} %</span></li>`).join('')}</ul></div>
-  <div><h4>Additivi</h4><ul>${r.additivi.map(x=>`<li><span>${esc(x.nome)}<br><span class="hint">${esc(x.quando||'')}</span></span><span style="white-space:normal;text-align:right;max-width:45%">${esc(x.g)} g</span></li>`).join('')}</ul></div></div></div>`; }
+  <div><h4>Additivi</h4><ul>${r.additivi.map(x=>`<li><span>${esc(x.nome)}<br><span class="hint keep">${esc(x.quando||'')}</span></span><span style="white-space:normal;text-align:right;max-width:45%">${esc(x.g)} g</span></li>`).join('')}</ul></div></div></div>`; }
 function bCost(b,S){ if(!b.rForm) return '<div class="hint">Costo non disponibile per questo batch.</div>'; const K=calc(b.rForm); const pani=b.pani||+$('#c-pani').value||10; const C=costo(K,b.rForm,pani,0,S?lotPrices(b,S):null);
   if(C.miss>=C.L.length) return '<div class="hint">Nessun prezzo inserito per questi ingredienti.</div>';
   let per100=C.per100, lab='per 100 g a fine cura (stima: −10,5 %)';
@@ -1755,7 +1757,7 @@ function bCard(b,S){ const el=document.createElement('div'); el.className='bt-ca
     <div class="bt-acts"><button class="primary" data-act="meta">Salva le note</button></div></div></details>
     <div style="margin-top:10px;text-align:right"><button class="sm ghost" data-act="del" style="color:var(--bad)">Elimina batch</button></div>`;
   if(!cut){ el.innerHTML=`<div class="bt-head"><div><h3>${esc(b.nome)}</h3><div class="bt-meta">${r?esc(r.titolo||r.label||''):''}${b.modificata?' · <span class="tag-mod">ricetta modificata'+(b.motivo?': '+esc(b.motivo):'')+'</span>':''} · colato il ${fmtD(b.dataColata)}</div></div><span class="bpill taglio">Da tagliare</span></div>
-      ${b.note?`<div class="hint" style="margin-top:8px">${esc(b.note)}</div>`:''}
+      ${b.note?`<div class="hint keep" style="margin-top:8px">${esc(b.note)}</div>`:''}
       <div class="bt-form" data-role="taglio"><b>Taglio</b>
         <div class="row"><label>Data del taglio <input type="date" data-t="data" value="${todayISO()}"></label><label>Pani tagliati <input type="number" min="1" step="1" data-t="pani" value="${b.pani||10}"></label></div>
         <div class="hint">Pesa 2-4 pani campione (0,01 g): ogni settimana ripeserai gli stessi.</div>
@@ -1767,7 +1769,7 @@ function bCard(b,S){ const el=document.createElement('div'); el.className='bt-ca
         <div class="bt-stat"><div class="v">−${fmt(a.loss)} %</div><div class="l">perso finora</div></div><div class="bt-stat"><div class="v">${a.last?fmt(a.last.wk)+' %':'—'}</div><div class="l">perdita / settimana</div></div><div class="bt-stat"><div class="v">${fmt(a.target[0],0)}–${fmt(a.target[1],0)} g</div><div class="l">peso atteso a fine cura</div></div></div>
       <div class="bt-bar"><div class="target" style="left:${a.min/(a.max+2)*100}%;width:${(a.max-a.min)/(a.max+2)*100}%"></div><div class="fill" style="width:${fillPct}%"></div></div>
       <div class="bt-barl"><span>0 %</span><span>fascia ${a.min}–${a.max} %</span><span>${a.max+2} %</span></div>
-      ${b.note?`<div class="hint" style="margin-top:10px">${esc(b.note)}</div>`:''}
+      ${b.note?`<div class="hint keep" style="margin-top:10px">${esc(b.note)}</div>`:''}
       <details open><summary>Pesate</summary>${bChart(a)}${stimaLine(b)}
         <div class="twrap"><table><thead><tr><th>Data</th><th class="hide-m">Giorni</th><th class="n hide-m">Pani (g)</th><th class="n">Media</th><th class="n">Δ totale</th><th class="n">Δ / sett.</th><th></th></tr></thead><tbody>
           ${b.rifilato?`<tr><td>${fmtD(b.dataTaglio)} <span class="hint">taglio</span></td><td class="hide-m">0</td><td class="n pz hide-m">${(b.rifilato.pesiPrima||[]).map(x=>fmt(x,2)).join(' · ')}</td><td class="n">${fmt(avg(b.rifilato.pesiPrima||[]),2)}</td><td class="n">—</td><td class="n">—</td><td></td></tr>
@@ -2106,6 +2108,12 @@ const _r2=render; render=function(){ const cp=$('#c-pani'); if(cp&&document.acti
 document.querySelectorAll('#rt-tabs button').forEach(x=>x.onclick=()=>{ setRT(x.dataset.t); const t=$('#rt-tabs'); if(t&&t.getBoundingClientRect().top<0) t.scrollIntoView({block:'start'}); });
 { const sa=$('#sem-all'); if(sa) sa.onclick=()=>{ SEM_ALL=!SEM_ALL; render(); }; }
 { let t='formula'; try{ t=localStorage.getItem('mrp-rt')||'formula'; }catch(e){} setRT(['formula','analisi','lav','costi'].includes(t)?t:'formula'); }
+
+// ⓘ: i testi di spiegazione lunghi restano chiusi dietro un'icona rossa
+function tipify(){ document.querySelectorAll('div.hint:not(.keep):not([data-tip]):not([data-pv-err])').forEach(h=>{ if(h.closest('#sheet,#label,.sheet,#gh-ov')) return; if(h.textContent.trim().length<80) return; h.dataset.tip='1'; h.classList.add('tip-h');
+  const bt=document.createElement('button'); bt.type='button'; bt.className='tipb'; bt.textContent='ⓘ'; bt.title='Spiegazione'; bt.setAttribute('aria-label','Spiegazione'); if(h.dataset.rt) bt.dataset.rt=h.dataset.rt; if(h.hidden) bt.hidden=true;
+  bt.onclick=e=>{ e.preventDefault(); e.stopPropagation(); h.classList.toggle('tip-o'); bt.textContent=h.classList.contains('tip-o')?'✕':'ⓘ'; }; h.parentNode.insertBefore(bt,h); }); }
+{ let tq=0; new MutationObserver(()=>{ if(tq) return; tq=requestAnimationFrame(()=>{ tq=0; try{ tipify(); }catch(e){} }); }).observe(document.body,{childList:true,subtree:true}); tipify(); }
 fillCmp();
 
 loadTemplate(TEMPL[0]);
