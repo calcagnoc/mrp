@@ -248,7 +248,8 @@ td input.gin{width:72px}
 .sheet .lines{border-bottom:1px solid #bbb;height:22px}
 .sheet .lot{font-size:10px;color:#555}
 .sheet .fchk{background:#fff;border:1.5px solid #555;border-radius:2px;width:22px;height:22px;padding:0;font-size:16px;font-weight:700;line-height:1;cursor:pointer;color:#2e7d32}
-.sheet tr.fdone td{background:none} .sheet tr.fdone td:not(.box):not(.blank){color:#8a8a8a} .sheet tr.fdone .fchk{background:#fff;border-color:#2e7d32;color:#2e7d32}
+.sheet table.ing tr[data-fk]{cursor:pointer} .sheet tr.fdone td{background:#dcefd3!important;color:#111} .sheet tr.fdone td.small{color:#333}
+@media screen{ .sheet table.ing td.box,.sheet table.ing th:first-child{display:none} } .sheet tr.fdone .fchk{background:#fff;border-color:#2e7d32;color:#2e7d32}
 .sheet input.fin,.sheet input.ft,.sheet input.fc,.sheet input.fm{width:100%;max-width:90px;font:inherit;font-family:var(--mono);font-size:13px;padding:5px 6px;border:1px solid #bbb;border-radius:6px;background:#fff;color:#222}
 .sheet input.fm{max-width:140px} .sheet .fmeta td{font-size:12px}
 .sheet table.ing{table-layout:fixed;width:100%} .sheet table.ing td.small{white-space:normal;word-break:break-word}
@@ -273,7 +274,7 @@ td input.gin{width:72px}
 .sheet .fprog button{margin-left:auto;flex:none}
 .sheet .fora{font-family:var(--mono);font-size:12px} .sheet .fmin{font-family:var(--mono);font-weight:700}
 .sheet button.sm{font-size:12px;padding:4px 8px}
-@media print{ .sheet input{border:0!important;padding:0!important} .sheet .fchk{border:1px solid #888;background:none!important;color:#222!important} .sheet tr.fdone td{background:none} .sheet ol.proc li.fdone{color:inherit;text-decoration:none} }
+@media print{ .sheet input{border:0!important;padding:0!important} .sheet .fchk{border:1px solid #888;background:none!important;color:#222!important} .sheet tr.fdone td{background:none!important} .sheet ol.proc li.fdone{color:inherit;text-decoration:none} }
 @media screen and (max-width:600px){ .sheet{padding:12px 10px} .sheet h1{font-size:16px}
   .sheet table.ing{display:block} .sheet table.ing thead,.sheet table.ing tbody{display:block}
   .sheet table.ing tr{display:grid;grid-template-columns:20px 1fr 64px;gap:0 6px;border-bottom:1px solid #bbb;padding:4px 0}
@@ -283,7 +284,7 @@ td input.gin{width:72px}
   .sheet table.ftag,.sheet table.controlli{display:table!important;white-space:normal!important;overflow:visible!important} .sheet table.ftag td,.sheet table.ftag th,.sheet table.controlli td,.sheet table.controlli th{white-space:normal!important}
   .sheet table.ftag.fhead tbody,.sheet table.ftag.fhead{display:block!important} .sheet table.ftag.fhead tr{display:grid;grid-template-columns:1fr 1fr} .sheet table.ftag.fhead td{display:block;border:1px solid #bbb}
   .sheet table.controlli th:nth-child(2),.sheet table.controlli td:nth-child(2){width:84px} .sheet table.controlli th:nth-child(3),.sheet table.controlli td:nth-child(3){width:118px}
-  .sheet table.ing tr{grid-template-columns:30px 1fr 72px 70px} .sheet table.ing td.n{white-space:normal!important;font-size:11.5px} .sheet table.ing td.blank{display:block;width:auto} .sheet table.ing td.blank input{max-width:74px}
+  .sheet table.ing tr{grid-template-columns:1fr 72px 70px} .sheet table.ing td,.sheet table.ing th{width:auto!important} .sheet table.ing td.small{grid-column:1/-1} .sheet table.ing tr.fdone{background:#dcefd3} .sheet table.ing tr.fdone td{background:transparent!important} .sheet table.ing td.n{white-space:normal!important;font-size:11.5px} .sheet table.ing td.blank{display:block;width:auto} .sheet table.ing td.blank input{max-width:74px}
   .sheet table:not(.ing) td.blank{width:auto}
   .sheet table.ing tr:has(th){display:none}
   .sheet table:not(.ing){display:block;overflow-x:auto;max-width:100%;white-space:nowrap} .sheet table:not(.ing) td,.sheet table:not(.ing) th{font-size:11px} .sheet .controlli td:first-child{white-space:normal;min-width:150px} }
@@ -1428,14 +1429,15 @@ function fWarn(tr){ const k=tr.dataset.fk, d=+tr.dataset.dose, w=tr.querySelecto
   const rel=Math.abs(diff)/d; if(rel>0.02&&Math.abs(diff)>=0.5){ w.textContent=`${diff>0?'+':'−'}${fmt(Math.abs(diff),1)} g (${diff>0?'+':'−'}${fmt(rel*100,0)} %)`; w.className='fwarn '+(rel>0.05?'bad':'warn'); } }
 function fProg(){ const el=$('#f-prog'); if(!el) return; const rows=[...document.querySelectorAll('#sheet tr[data-fk]')], st=[...document.querySelectorAll('#sheet li[data-fs]')];
   const nd=rows.filter(r=>FST.done[r.dataset.fk]).length, ns=st.filter(l=>FST.steps[l.dataset.fs]).length;
-  el.innerHTML=`<span><b>${nd}/${rows.length}</b> pesati</span><span><b>${ns}/${st.length}</b> passaggi</span>${FST.tt&&FST.t0?`<span>trace <b>${fmt((FST.tt-FST.t0)/60000,1)} min</b></span>`:''}${FST.bid?(()=>{ const bt=(typeof BATCHES!=='undefined'?BATCHES:[]).find(x=>x.id===FST.bid); return bt?`<span>batch <b>${esc(bt.nome)}</b></span>`:''; })():''}<button type="button" class="sm ghost" id="f-reset">Azzera</button>`;
+  el.innerHTML=`<span><b>${nd}/${rows.length}</b> pesati <span class="small" style="color:#666">· tocca la riga quando l'hai pesato</span></span><span><b>${ns}/${st.length}</b> passaggi</span>${FST.tt&&FST.t0?`<span>trace <b>${fmt((FST.tt-FST.t0)/60000,1)} min</b></span>`:''}${FST.bid?(()=>{ const bt=(typeof BATCHES!=='undefined'?BATCHES:[]).find(x=>x.id===FST.bid); return bt?`<span>batch <b>${esc(bt.nome)}</b></span>`:''; })():''}<button type="button" class="sm ghost" id="f-reset">Azzera</button>`;
   $('#f-reset').onclick=()=>{ if(!confirmTwice($('#f-reset'))) return; try{ localStorage.removeItem(fKey()); }catch(e){} fLoad(); $('#sheet').innerHTML=foglio(); fWire(); }; }
 function confirmTwice(btn){ if(btn.dataset.sure==='1') return true; btn.dataset.sure='1'; btn.textContent='Sicuro?'; setTimeout(()=>{ if(btn.isConnected){ btn.dataset.sure=''; btn.textContent='Azzera'; } },3000); return false; }
 function fMin(){ const m=$('#f-min'); if(!m) return; m.textContent= FST.t0&&FST.tt? fmt((FST.tt-FST.t0)/60000,1)+' min ' : FST.t0? 'in corso… ' : ''; document.querySelectorAll('#sheet [data-fo]').forEach(s=>{ const k=s.dataset.fo; s.textContent= k==='unione'? (FST.t0? hhmm(FST.t0)+(FST.tt?' → '+hhmm(FST.tt):'') : '') : (FST.ore[k]? hhmm(FST.ore[k]) : ''); }); }
 function fWire(){ const S=$('#sheet');
   S.querySelectorAll('tr[data-fk]').forEach(tr=>{ const k=tr.dataset.fk, bt=tr.querySelector('.fchk'), inp=tr.querySelector('.fin');
     const paint=()=>{ const on=!!FST.done[k]; tr.classList.toggle('fdone',on); bt.textContent=on?'✓':''; };
-    bt.onclick=()=>{ if(tr.dataset.sw) return; FST.done[k]=!FST.done[k]; fSave(); if(FST.done[k]) fSweep(tr,()=>{ paint(); fProg(); fNext(); }); else { paint(); fProg(); fNext(); } };
+    const tog=()=>{ if(tr.dataset.sw) return; FST.done[k]=!FST.done[k]; fSave(); if(FST.done[k]) fSweep(tr,()=>{ paint(); fProg(); fNext(); }); else { paint(); fProg(); fNext(); } };
+    bt.onclick=e=>{ e.stopPropagation(); tog(); }; tr.onclick=e=>{ if(e.target.closest('input,button,a')) return; tog(); };
     if(FST.pesi[k]!=null) inp.value=FST.pesi[k];
     inp.oninput=()=>{ FST.pesi[k]=inp.value.trim(); if(inp.value.trim()&&!FST.done[k]&&!tr.dataset.sw){ FST.done[k]=true; fSweep(tr,()=>{ paint(); fProg(); fNext(); }); } fSave(); fWarn(tr); };
     paint(); fWarn(tr); });
