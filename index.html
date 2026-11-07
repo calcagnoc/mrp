@@ -255,11 +255,11 @@ td input.gin{width:72px}
 .sheet table.ing th:nth-child(1),.sheet table.ing td:nth-child(1){width:44px} .sheet table.ing th:nth-child(3),.sheet table.ing td:nth-child(3){width:118px}
 .sheet table.ing th:nth-child(4),.sheet table.ing td:nth-child(4){width:104px} .sheet table.ing th:nth-child(5),.sheet table.ing td:nth-child(5){width:190px}
 .sheet table.ing td.blank input{max-width:100%} .sheet table.ing td.n{white-space:normal} .sheet table.ing td:nth-child(2){overflow-wrap:anywhere;white-space:normal} .sheet table.ing .lot{white-space:normal;padding-right:6px}
-.sheet tr.fnext td:nth-child(2){box-shadow:inset 3px 0 0 var(--accent,#5b7a3e)} .sheet tr.fnext td:nth-child(2)::before{content:'prossimo ›';display:block;font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--accent,#5b7a3e);text-transform:uppercase}
+.sheet tr.fnext td:nth-child(2)::before{content:'▸ ';color:var(--accent,#5b7a3e);font-size:1.05em}
 .sheet .fchk.on{background:#2e7d32;border-color:#2e7d32;color:#fff}
 .sheet input.fx,.sheet input.ftg{width:100%;font:inherit;font-size:13px;padding:5px 6px;border:1px solid #bbb;border-radius:6px;background:#fff;color:#222;box-sizing:border-box} .sheet table.ftag{table-layout:fixed;width:100%} .sheet table.ftag td{vertical-align:top;font-size:12px} .sheet table.ftag .fl{display:block;font-size:11px;color:#555;margin-bottom:3px} .sheet table.ftag input{display:block;max-width:100%}
 .sheet table.controlli{table-layout:fixed;width:100%} .sheet table.controlli th:nth-child(2),.sheet table.controlli td:nth-child(2){width:150px} .sheet table.controlli th:nth-child(3),.sheet table.controlli td:nth-child(3){width:210px}
-@media print{ .sheet tr.fnext td:nth-child(2)::before{display:none} .sheet tr.fnext td:nth-child(2){box-shadow:none} }
+@media print{ .sheet tr.fnext td:nth-child(2)::before{display:none} }
 .sheet .fgo{margin:8px 0 2px;padding:8px 10px;border:1px solid #cfe0c3;background:#f3f7ef;border-radius:10px;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap} .sheet .fgo[hidden]{display:none}
 .sheet .fph{margin-top:8px;border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:12px;break-inside:avoid} .sheet .fph ol{margin:4px 0 6px;padding-left:20px} .sheet .fph li{margin:2px 0}
 .sheet .fwarn{font-size:11px;font-weight:600} .sheet .fwarn.warn{color:#9a6a00} .sheet .fwarn.bad{color:#c0392b}
