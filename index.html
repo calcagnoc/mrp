@@ -257,7 +257,8 @@ td input.gin{width:72px}
 .sheet table.ing td.blank input{max-width:100%} .sheet table.ing td.n{white-space:normal} .sheet table.ing td:nth-child(2){overflow-wrap:anywhere;white-space:normal} .sheet table.ing .lot{white-space:normal;padding-right:6px}
 .sheet tr.fnext td:nth-child(2){box-shadow:inset 3px 0 0 var(--accent,#5b7a3e)} .sheet tr.fnext td:nth-child(2)::before{content:'prossimo ›';display:block;font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--accent,#5b7a3e);text-transform:uppercase}
 .sheet .fchk.on{background:#2e7d32;border-color:#2e7d32;color:#fff}
-.sheet input.fx,.sheet input.ftg{width:100%;font:inherit;font-size:13px;padding:5px 6px;border:1px solid #bbb;border-radius:6px;background:#fff;color:#222;box-sizing:border-box} .sheet table.ftag td{vertical-align:top;font-size:12px}
+.sheet input.fx,.sheet input.ftg{width:100%;font:inherit;font-size:13px;padding:5px 6px;border:1px solid #bbb;border-radius:6px;background:#fff;color:#222;box-sizing:border-box} .sheet table.ftag{table-layout:fixed;width:100%} .sheet table.ftag td{vertical-align:top;font-size:12px} .sheet table.ftag .fl{display:block;font-size:11px;color:#555;margin-bottom:3px} .sheet table.ftag input{display:block;max-width:100%}
+.sheet table.controlli{table-layout:fixed;width:100%} .sheet table.controlli th:nth-child(2),.sheet table.controlli td:nth-child(2){width:150px} .sheet table.controlli th:nth-child(3),.sheet table.controlli td:nth-child(3){width:210px}
 @media print{ .sheet tr.fnext td:nth-child(2)::before{display:none} .sheet tr.fnext td:nth-child(2){box-shadow:none} }
 .sheet .fwarn{font-size:11px;font-weight:600} .sheet .fwarn.warn{color:#9a6a00} .sheet .fwarn.bad{color:#c0392b}
 .sheet ol.proc li{cursor:pointer;padding:2px 0} .sheet ol.proc li.fdone{color:#888;text-decoration:line-through}
@@ -272,6 +273,9 @@ td input.gin{width:72px}
   .sheet table.ing th,.sheet table.ing td{border:0;padding:1px 2px;white-space:normal;word-break:break-word;font-size:12px}
   .sheet table.ing td.n{text-align:right;white-space:nowrap} .sheet table.ing td.box{text-align:left}
   .sheet table.ing td.small{grid-column:2/-1;color:#555}
+  .sheet table.ftag,.sheet table.controlli{display:table!important;white-space:normal!important;overflow:visible!important} .sheet table.ftag td,.sheet table.ftag th,.sheet table.controlli td,.sheet table.controlli th{white-space:normal!important}
+  .sheet table.ftag.fhead tbody,.sheet table.ftag.fhead{display:block!important} .sheet table.ftag.fhead tr{display:grid;grid-template-columns:1fr 1fr} .sheet table.ftag.fhead td{display:block;border:1px solid #bbb}
+  .sheet table.controlli th:nth-child(2),.sheet table.controlli td:nth-child(2){width:84px} .sheet table.controlli th:nth-child(3),.sheet table.controlli td:nth-child(3){width:118px}
   .sheet table.ing tr{grid-template-columns:30px 1fr 72px 70px} .sheet table.ing td.n{white-space:normal!important;font-size:11.5px} .sheet table.ing td.blank{display:block;width:auto} .sheet table.ing td.blank input{max-width:74px}
   .sheet table:not(.ing) td.blank{width:auto}
   .sheet table.ing tr:has(th){display:none}
@@ -1387,7 +1391,7 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
     <tr><td>Preparato da</td><td></td><td class="blank"><input class="fx" data-fx="firma" placeholder="nome"></td></tr></table>
     <div class="small" style="margin-top:6px"><b>Soda sulla pelle o negli occhi:</b> acqua corrente abbondante per 15 minuti, niente aceto; occhi → medico.</div>`;
   const n=+$('#c-pani').value||10;
-  h+=`<h3>Taglio</h3><table class="ftag"><tr><td>Data <input class="ftg" data-ftg="data" type="date"></td><td>Ora <input class="ftg" data-ftg="ora" type="time"></td><td>Ore dalla colata: <b id="f-ore"></b></td><td>Pani tagliati <input class="ftg" data-ftg="pani" inputmode="numeric" value="${n}"></td></tr></table>
+  h+=`<h3>Taglio</h3><table class="ftag fhead"><tr><td><span class="fl">Data</span><input class="ftg" data-ftg="data" type="date"></td><td><span class="fl">Ora</span><input class="ftg" data-ftg="ora" type="time"></td><td><span class="fl">Ore dalla colata</span><b id="f-ore"></b></td><td><span class="fl">Pani tagliati</span><input class="ftg" data-ftg="pani" inputmode="numeric" value="${n}"></td></tr></table>
     <table style="margin-top:6px" class="ftag"><tr>${[1,2,3,4].map(i=>`<th>Pane ${i} (g)</th>`).join('')}</tr><tr>${[0,1,2,3].map(i=>`<td><input class="ftg" data-ftg="p${i}" inputmode="decimal" placeholder="0,01 g"></td>`).join('')}</tr></table>
     <div class="small" style="margin-top:4px">Pesa 4 pani campione (sempre gli stessi, segnali): servono per seguire la cura. Cura minima ${rule.settMin} settimane.</div>
     <div class="noprint" style="margin-top:6px"><button type="button" class="sm" id="f-tsave">Salva il taglio nel batch</button> <span class="small" id="f-tmsg"></span></div>`;
