@@ -247,12 +247,25 @@ td input.gin{width:72px}
 .sheet .small{font-size:11px;color:#555}
 .sheet .lines{border-bottom:1px solid #bbb;height:22px}
 .sheet .lot{font-size:10px;color:#555}
+.sheet .fchk{background:none;border:1.5px solid #888;border-radius:6px;width:26px;height:26px;padding:0;font-size:15px;line-height:1;cursor:pointer;color:#2e7d32}
+.sheet tr.fdone td{background:#eaf5e4} .sheet tr.fdone .fchk{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.sheet input.fin,.sheet input.ft,.sheet input.fc,.sheet input.fm{width:100%;max-width:90px;font:inherit;font-family:var(--mono);font-size:13px;padding:5px 6px;border:1px solid #bbb;border-radius:6px;background:#fff;color:#222}
+.sheet input.fm{max-width:140px} .sheet .fmeta td{font-size:12px}
+.sheet .fwarn{font-size:11px;font-weight:600} .sheet .fwarn.warn{color:#9a6a00} .sheet .fwarn.bad{color:#c0392b}
+.sheet ol.proc li{cursor:pointer;padding:2px 0} .sheet ol.proc li.fdone{color:#888;text-decoration:line-through}
+.sheet .fprog{position:sticky;top:0;z-index:3;display:flex;gap:10px;align-items:center;background:#f3f7ef;border:1px solid #cfe0c3;border-radius:10px;padding:6px 8px;margin:10px 0 4px;font-size:12.5px;white-space:nowrap;overflow-x:auto}
+.sheet .fprog button{margin-left:auto;flex:none}
+.sheet .fora{font-family:var(--mono);font-size:12px} .sheet .fmin{font-family:var(--mono);font-weight:700}
+.sheet button.sm{font-size:12px;padding:4px 8px}
+@media print{ .sheet input{border:0!important;padding:0!important} .sheet .fchk{border:1px solid #888;background:none!important;color:#222!important} .sheet tr.fdone td{background:none} .sheet ol.proc li.fdone{color:inherit;text-decoration:none} }
 @media screen and (max-width:600px){ .sheet{padding:12px 10px} .sheet h1{font-size:16px}
   .sheet table.ing{display:block} .sheet table.ing thead,.sheet table.ing tbody{display:block}
   .sheet table.ing tr{display:grid;grid-template-columns:20px 1fr 64px;gap:0 6px;border-bottom:1px solid #bbb;padding:4px 0}
   .sheet table.ing th,.sheet table.ing td{border:0;padding:1px 2px;white-space:normal;word-break:break-word;font-size:12px}
   .sheet table.ing td.n{text-align:right;white-space:nowrap} .sheet table.ing td.box{text-align:left}
-  .sheet table.ing td.small{grid-column:2/-1;color:#555} .sheet .blank{display:none}
+  .sheet table.ing td.small{grid-column:2/-1;color:#555}
+  .sheet table.ing tr{grid-template-columns:30px 1fr 72px 70px} .sheet table.ing td.n{white-space:normal!important;font-size:11.5px} .sheet table.ing td.blank{display:block;width:auto} .sheet table.ing td.blank input{max-width:74px}
+  .sheet table:not(.ing) td.blank{width:auto}
   .sheet table.ing tr:has(th){display:none}
   .sheet table:not(.ing){display:block;overflow-x:auto;max-width:100%;white-space:nowrap} .sheet table:not(.ing) td,.sheet table:not(.ing) th{font-size:11px} .sheet .controlli td:first-child{white-space:normal;min-width:150px} }
 .sheet,.sheet th,.sheet td,.sheet h3{color:#111} .sheet .small,.sheet .meta,.sheet .lot{color:#555}
@@ -587,7 +600,7 @@ optgroup{font-weight:700;font-style:normal}
 </section>
 
 <div id="sheet-ov" class="ov" hidden>
-  <div class="ov-bar noprint"><button id="sh-print">Stampa</button><button id="sh-dl" hidden>Scarica</button><button class="primary" id="sh-close">Chiudi</button></div>
+  <div class="ov-bar noprint"><button id="sh-print">Stampa</button><button id="sh-dl" hidden>Scarica</button><button id="sh-reg">Avvia batch con questi dati</button><button class="primary" id="sh-close">Chiudi</button></div>
   <div id="sheet" class="sheet"></div>
 </div>
 <div id="bk-ov" class="ov" hidden>
@@ -637,6 +650,7 @@ optgroup{font-weight:700;font-style:normal}
       <label>Nome del batch <input id="ab-nome"></label>
       <label>Data della colata <input id="ab-data" type="date"></label>
     </div>
+    <div class="hint keep" id="ab-lav" hidden style="margin-top:8px;color:var(--ok)"></div>
     <label style="display:grid;gap:4px;font-size:.78rem;color:var(--muted);margin-top:8px">Note (temperature, trace, stampo…) <textarea id="ab-note" rows="3" style="font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg)"></textarea></label>
     <div class="row" style="margin-top:10px;justify-content:flex-end"><button class="ghost" id="reg-close">Annulla</button><button class="primary" id="ab-go">Crea batch</button></div>
   </div>
@@ -1324,14 +1338,15 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
   const disp=K.adds.filter(a=>(a.d.solido&&['Argilla','Polvere','Colorante'].includes(a.d.cat))||a.id==='calendula').map(a=>({a, og: a.id==='calendula'? 20 : Math.max(20, Math.round(a.g*2.5/5)*5)}));
   let S0=null; try{ S0=magState(); }catch(e){}
   const lotHint=key=>{ if(!S0||!key) return ''; const P=S0.P[ckey(key)]||S0.P[key]; if(!P) return ''; const l=P.lots.filter(x=>x.rest>0.5).sort((x,y)=>(x.data||'').localeCompare(y.data||''))[0]; return l? `<div class="lot">lotto: ${esc(l.desc||l.nome)} · ${esc(l.forn||'')} ${fmtD(l.data)}${l.lotto?' · n. '+esc(l.lotto):''}${l.scad?' · '+esc(scadTxt(l.scad)):''}</div>` : ''; };
-  const row=(nome,g,extra,key)=>`<tr><td class="box">☐</td><td>${nome}${key?lotHint(key):''}</td><td class="n">${g}</td><td class="blank"></td><td class="small">${extra||''}</td></tr>`;
+  const row=(nome,g,extra,key)=>{ const rk=key||slug(String(nome).replace(/<[^>]+>/g,'')); const dn=fnum(String(g).replace(/<[^>]+>/g,' ').trim().split(/\s/)[0]); return `<tr data-fk="${esc(rk)}" data-dose="${isNaN(dn)?'':dn}"><td class="box"><button type="button" class="fchk" aria-label="Pesato">☐</button></td><td>${nome}${key?lotHint(key):''}<div class="fwarn"></div></td><td class="n">${g}</td><td class="blank"><input class="fin" inputmode="decimal" placeholder="g" aria-label="Grammi pesati"></td><td class="small">${extra||''}</td></tr>`; };
   const head='<tr><th></th><th>Ingrediente</th><th>Dose</th><th class="blank">Pesato</th><th>Note</th></tr>';
   const g1=x=>fmt(x,1)+' g', g0=x=>fmt(x,0)+' g';
   const oli=K.adds.filter(a=>where(a)==='oli'), acq=K.adds.filter(a=>where(a)==='acqua'), lis=K.adds.filter(a=>where(a)==='lisciva'), tr=K.adds.filter(a=>where(a)==='trace');
   const blend=(R.oe||[]).length;
   let h=`<h1>${esc(R.nome||'Ricetta')} — foglio di pesata</h1>
   <div class="meta">${esc(rule.label)} · oli ${fmt(K.gSum,0)} g · superfat ${fmt(R.sf)} % · lisciva ${R.conc} %${R.pur<100?' · NaOH '+R.pur+' %':''} · batch ~${fmt(K.batch,0)} g</div>
-  <table style="margin-top:8px"><tr><td style="width:33%">Data: </td><td style="width:33%">Lotto n.: </td><td>Stanza °C: </td></tr></table>`;
+  <div class="fprog noprint" id="f-prog"></div>
+  <table style="margin-top:8px" class="fmeta"><tr><td style="width:33%">Data: <input class="fm" data-fm="data" type="date"></td><td style="width:33%">Lotto n.: <input class="fm" data-fm="lotto"></td><td>Stanza °C: <input class="fm" data-fm="stanza" inputmode="decimal"></td></tr></table>`;
   if(liq&&disp.length){ h+=`<h3>Prima di scaldare</h3><table class="ing">${head}`+disp.map(x=>row(`Preleva ${x.og} g di ${esc(liq.c.nome.toLowerCase())} per ${esc(x.a.d.nome.toLowerCase())}`, x.og+' g', 'dai '+fmt(liq.g,0)+' g pesati')).join('')+'</table>'; }
   h+=`<h3>1 · Fase oleosa ${T.tipo==='cera'?'(con cera: prima della lisciva, sul fuoco fino a 68-70 °C)':T.tipo==='burri'?'(burri una volta a 60-65 °C, poi giù a '+T.oli+' °C)':''}</h3><table class="ing">${head}`
     + K.oils.map(o=>row(esc(o.c.nome), g0(o.g), '', o.id)).join('')
@@ -1345,13 +1360,13 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
     + `</table>`;
   if(tr.length){ h+=`<h3>3 · A emulsione / trace</h3><table class="ing">${head}`
     + tr.map(a=> (a.id==='oe'&&blend)? R.oe.map(o=>row('OE '+esc(oeById[o.id]?.nome||o.id), g1(R.tot*o.pct/100), 'bicchierino chiuso, a mano 30-60 s')).join('') : row(esc(a.d.nome), g1(a.g), esc(a.d.dove))).join('') + `</table>`; }
-  { let P=[]; try{ P=procedura(K); }catch(e){ console.error(e); } if(P.length) h+=`<h3>Procedura</h3><ol class="proc">${P.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`; }
+  { let P=[]; try{ P=procedura(K); }catch(e){ console.error(e); } if(P.length) h+=`<h3>Procedura</h3><ol class="proc">${P.map((x,i)=>`<li data-fs="${i}">${esc(x)}</li>`).join('')}</ol>`; }
   h+=`<h3>Temperature e tempi</h3><table><tr><th>Fase</th><th>Obiettivo</th><th>Reale</th><th>Ora</th></tr>
-    <tr><td>Oli prima di unire</td><td class="n">${T.oli} °C</td><td class="blank"></td><td class="blank"></td></tr>
-    <tr><td>Lisciva prima di versare</td><td class="n">${T.lisc} °C</td><td class="blank"></td><td class="blank"></td></tr>
-    <tr><td>Emulsione stabile / trace</td><td class="small">${T.tipo==='base'?'2-5 min':'1-4 min'}</td><td class="blank"></td><td class="blank"></td></tr>
-    <tr><td>In stampo</td><td></td><td></td><td class="blank"></td></tr></table>
-    <table style="margin-top:6px"><tr><th>Cuore stampo</th>${[30,60,90,120,180].map(m=>`<th>${m} min</th>`).join('')}</tr><tr><td class="small">°C (sopra 85: fresco/ventilatore)</td>${[1,2,3,4,5].map(()=>'<td class="blank"></td>').join('')}</tr></table>`;
+    <tr><td>Oli prima di unire</td><td class="n">${T.oli} °C</td><td class="blank"><input class="ft" data-ft="oli" inputmode="decimal" placeholder="°C"></td><td class="blank"><span class="fora" data-fo="oli"></span></td></tr>
+    <tr><td>Lisciva prima di versare</td><td class="n">${T.lisc} °C</td><td class="blank"><input class="ft" data-ft="lisc" inputmode="decimal" placeholder="°C"></td><td class="blank"><span class="fora" data-fo="lisc"></span></td></tr>
+    <tr><td>Emulsione stabile / trace</td><td class="small">${T.tipo==='base'?'2-5 min':'1-4 min'}</td><td class="blank"><span class="fmin" id="f-min"></span><span class="noprint"><button type="button" class="sm" id="f-unisci">Unisco ora</button> <button type="button" class="sm" id="f-trace">Trace!</button></span></td><td class="blank"><span class="fora" data-fo="unione"></span></td></tr>
+    <tr><td>In stampo</td><td></td><td></td><td class="blank"><span class="fora" data-fo="stampo"></span> <button type="button" class="sm noprint" id="f-stampo">Versato ora</button></td></tr></table>
+    <table style="margin-top:6px"><tr><th>Cuore stampo</th>${[30,60,90,120,180].map(m=>`<th>${m} min</th>`).join('')}</tr><tr><td class="small">°C (sopra 85: fresco/ventilatore)</td>${[0,1,2,3,4].map(i=>`<td class="blank"><input class="fc" data-fc="${i}" inputmode="decimal" placeholder="°C"></td>`).join('')}</tr></table>`;
   h+=`<h3>Controlli e firma</h3><table class="controlli"><tr><th>Controllo</th><th>Atteso</th><th>Reale</th></tr>
     <tr><td>pH a 48 h (fenolftaleina o pHmetro al 10 %)</td><td class="small">nessun rosa / 9,5-10,5</td><td class="blank"></td></tr>
     <tr><td>pH a fine cura</td><td class="small">9,5-10,5</td><td class="blank"></td></tr>
@@ -1366,8 +1381,47 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
   h+=`<h3>Note</h3>`+'<div class="lines"></div>'.repeat(4)
     +`<div class="small" style="margin-top:10px">Generato con MRP SOAP il ${new Date().toLocaleDateString('it-IT')}. NaOH ${fmt(K.naohTeo,2)} g teorici × ${(1-R.sf/100).toFixed(2)}${K.comp?' + '+fmt(K.comp,2)+' g per il citrico':''}.</div>`;
   return h; }
+
+// ---- foglio di pesata interattivo: stato per ricetta, salvato sul dispositivo
+let FST=null; const fnum=v=>parseFloat(String(v==null?'':v).replace(',','.'));
+const fKey=()=>'mrp-foglio:'+(R.id||slug(R.nome)||'nuova');
+function fLoad(){ try{ FST=JSON.parse(localStorage.getItem(fKey())||'null'); }catch(e){ FST=null; } if(!FST||FST.v!==1) FST={v:1,done:{},pesi:{},t:{},ore:{},steps:{},cuore:{},meta:{data:todayISO()},t0:null,tt:null}; }
+function fSave(){ FST.agg=new Date().toISOString(); try{ localStorage.setItem(fKey(),JSON.stringify(FST)); }catch(e){} }
+const hhmm=d=>new Date(d).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+function fWarn(tr){ const k=tr.dataset.fk, d=+tr.dataset.dose, w=tr.querySelector('.fwarn'); const v=fnum(FST.pesi[k]); w.textContent=''; w.className='fwarn'; if(isNaN(v)||!d) return;
+  const diff=v-d; if(k==='naoh'){ const K=calc(); const pur=(+R.pur||100)/100; const sfE=(1-((v*pur)-(K.comp||0))/K.naohTeo)*100; if(Math.abs(diff)>=0.3){ w.textContent=`${diff>0?'+':'−'}${fmt(Math.abs(diff),1)} g di soda → superfat effettivo ${fmt(sfE,1)} % (ricetta ${fmt(R.sf)} %)`; w.className='fwarn '+(Math.abs(sfE-R.sf)>=1?'bad':'warn'); } return; }
+  if(k==='lattato') return; const rel=Math.abs(diff)/d; if(rel>0.02&&Math.abs(diff)>=0.5){ w.textContent=`${diff>0?'+':'−'}${fmt(Math.abs(diff),1)} g (${diff>0?'+':'−'}${fmt(rel*100,0)} %)`; w.className='fwarn '+(rel>0.05?'bad':'warn'); } }
+function fProg(){ const el=$('#f-prog'); if(!el) return; const rows=[...document.querySelectorAll('#sheet tr[data-fk]')], st=[...document.querySelectorAll('#sheet li[data-fs]')];
+  const nd=rows.filter(r=>FST.done[r.dataset.fk]).length, ns=st.filter(l=>FST.steps[l.dataset.fs]).length;
+  el.innerHTML=`<span><b>${nd}/${rows.length}</b> pesati</span><span><b>${ns}/${st.length}</b> passaggi</span>${FST.tt&&FST.t0?`<span>trace <b>${fmt((FST.tt-FST.t0)/60000,1)} min</b></span>`:''}<button type="button" class="sm ghost" id="f-reset">Azzera</button>`;
+  $('#f-reset').onclick=()=>{ if(!confirmTwice($('#f-reset'))) return; try{ localStorage.removeItem(fKey()); }catch(e){} fLoad(); $('#sheet').innerHTML=foglio(); fWire(); }; }
+function confirmTwice(btn){ if(btn.dataset.sure==='1') return true; btn.dataset.sure='1'; btn.textContent='Sicuro?'; setTimeout(()=>{ if(btn.isConnected){ btn.dataset.sure=''; btn.textContent='Azzera'; } },3000); return false; }
+function fMin(){ const m=$('#f-min'); if(!m) return; m.textContent= FST.t0&&FST.tt? fmt((FST.tt-FST.t0)/60000,1)+' min ' : FST.t0? 'in corso… ' : ''; document.querySelectorAll('#sheet [data-fo]').forEach(s=>{ const k=s.dataset.fo; s.textContent= k==='unione'? (FST.t0? hhmm(FST.t0)+(FST.tt?' → '+hhmm(FST.tt):'') : '') : (FST.ore[k]? hhmm(FST.ore[k]) : ''); }); }
+function fWire(){ const S=$('#sheet');
+  S.querySelectorAll('tr[data-fk]').forEach(tr=>{ const k=tr.dataset.fk, bt=tr.querySelector('.fchk'), inp=tr.querySelector('.fin');
+    const paint=()=>{ const on=!!FST.done[k]; tr.classList.toggle('fdone',on); bt.textContent=on?'✓':'☐'; };
+    bt.onclick=()=>{ FST.done[k]=!FST.done[k]; fSave(); paint(); fProg(); };
+    if(FST.pesi[k]!=null) inp.value=FST.pesi[k];
+    inp.oninput=()=>{ FST.pesi[k]=inp.value.trim(); if(inp.value.trim()&&!FST.done[k]){ FST.done[k]=true; paint(); fProg(); } fSave(); fWarn(tr); };
+    paint(); fWarn(tr); });
+  S.querySelectorAll('li[data-fs]').forEach(li=>{ const i=li.dataset.fs; li.classList.toggle('fdone',!!FST.steps[i]); li.onclick=()=>{ FST.steps[i]=!FST.steps[i]; li.classList.toggle('fdone',!!FST.steps[i]); fSave(); fProg(); }; });
+  S.querySelectorAll('input.ft').forEach(i=>{ const k=i.dataset.ft; if(FST.t[k]!=null) i.value=FST.t[k]; i.oninput=()=>{ FST.t[k]=i.value.trim(); if(i.value.trim()) FST.ore[k]=FST.ore[k]||Date.now(); fSave(); fMin(); }; });
+  S.querySelectorAll('input.fc').forEach(i=>{ const k=i.dataset.fc; if(FST.cuore[k]!=null) i.value=FST.cuore[k]; i.oninput=()=>{ FST.cuore[k]=i.value.trim(); fSave(); }; });
+  S.querySelectorAll('input.fm').forEach(i=>{ const k=i.dataset.fm; if(FST.meta[k]!=null) i.value=FST.meta[k]; i.oninput=()=>{ FST.meta[k]=i.value.trim(); fSave(); }; });
+  const u=$('#f-unisci'), t=$('#f-trace'), s=$('#f-stampo');
+  if(u) u.onclick=()=>{ FST.t0=Date.now(); FST.tt=null; fSave(); fMin(); fProg(); toast('Cronometro partito: premi «Trace!» quando arriva'); };
+  if(t) t.onclick=()=>{ if(!FST.t0){ toast('Prima premi «Unisco ora».'); return; } FST.tt=Date.now(); fSave(); fMin(); fProg(); };
+  if(s) s.onclick=()=>{ FST.ore.stampo=Date.now(); fSave(); fMin(); };
+  fMin(); fProg(); }
+function fRiassunto(){ if(!FST) return null; const K=calc(); const L={};
+  const pesi={}; document.querySelectorAll('#sheet tr[data-fk]').forEach(tr=>{ const v=fnum(FST.pesi[tr.dataset.fk]); if(!isNaN(v)) pesi[tr.dataset.fk]={dose:+tr.dataset.dose||null, reale:v}; });
+  const n=x=>{ const v=fnum(x); return isNaN(v)?null:v; };
+  L.pesi=pesi; L.oli=n(FST.t.oli); L.lisc=n(FST.t.lisc); L.stanza=n(FST.meta.stanza); L.lotto=FST.meta.lotto||'';
+  L.minTrace= FST.t0&&FST.tt? Math.round((FST.tt-FST.t0)/6000)/10 : null; L.cuore=[30,60,90,120,180].map((m,i)=>({min:m,c:n(FST.cuore[i])})).filter(x=>x.c!=null);
+  if(pesi.naoh){ const pur=(+R.pur||100)/100; L.sfEff=Math.round((1-((pesi.naoh.reale*pur)-(K.comp||0))/K.naohTeo)*1000)/10; }
+  const vuoto=!Object.keys(pesi).length&&L.oli==null&&L.lisc==null&&L.minTrace==null&&!L.cuore.length; return vuoto? null : L; }
 let dlNs=null; (async()=>{ try{ dlNs=await claude.use('downloads'); }catch(e){ dlNs=null; } if(dlNs) $('#sh-dl').hidden=false; })();
-$('#btn-sheet').onclick=()=>{ if(!calc().gSum){ toast('Aggiungi gli oli.'); return; } $('#sheet').innerHTML=foglio(); $('#sheet-ov').hidden=false; window.scrollTo(0,0); };
+$('#btn-sheet').onclick=()=>{ if(!calc().gSum){ toast('Aggiungi gli oli.'); return; } fLoad(); $('#sheet').innerHTML=foglio(); fWire(); $('#sheet-ov').hidden=false; window.scrollTo(0,0); };
 $('#sh-close').onclick=()=>{ $('#sheet-ov').hidden=true; };
 $('#sh-print').onclick=()=>{ try{ window.print(); }catch(e){ toast('Stampa non disponibile qui: usa Scarica.'); } };
 $('#sh-dl').onclick=async()=>{ if(!dlNs) return; const css=[...document.styleSheets].map(s=>{ try{ return [...s.cssRules].map(r=>r.cssText).filter(t=>t.includes('.sheet')||t.startsWith(':root')).join('\n'); }catch(e){ return ''; } }).join('\n');
@@ -1390,12 +1444,14 @@ function cardFor(r){ const save=R; R=r; try{ return regPayload().ricettaDati; } 
 const snapR=r=>JSON.parse(JSON.stringify({pani:r.pani||10,nome:r.nome,dest:r.dest,tot:r.tot,sf:r.sf,pur:r.pur,conc:r.conc,oli:r.oli.map(o=>({id:o.id,pct:+o.pct||0})),add:r.add.map(a=>({id:a.id,pct:+a.pct||0})),oe:(r.oe||[]).map(o=>({id:o.id,pct:+o.pct||0}))}));
 const todayISO=()=>{ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
 $('#btn-reg').onclick=()=>{ if(!calc().gSum){ toast('Aggiungi gli oli.'); return; } if(EDIT_BATCH){ toast('Stai correggendo un batch: salva o annulla prima.'); return; }
-  $('#ab-nome').value=R.nome||''; $('#ab-data').value=todayISO(); $('#ab-note').value=''; $('#reg-ov').hidden=false; window.scrollTo(0,0); };
+  $('#ab-nome').value=R.nome||''; $('#ab-data').value=todayISO(); $('#ab-note').value=''; { fLoad(); $('#sheet').innerHTML=foglio(); const L=fRiassunto(); const hl=$('#ab-lav'); if(hl){ hl.hidden=!L; hl.textContent= L? 'Dal foglio di pesata: '+lavTxt(L) : ''; } } $('#reg-ov').hidden=false; window.scrollTo(0,0); };
 $('#reg-close').onclick=()=>{ $('#reg-ov').hidden=true; };
+$('#sh-reg').onclick=()=>{ $('#sheet-ov').hidden=true; $('#btn-reg').click(); if(FST&&FST.meta&&FST.meta.data) $('#ab-data').value=FST.meta.data; const L=fRiassunto(); const hl=$('#ab-lav'); if(hl){ hl.hidden=!L; hl.textContent= L? 'Dal foglio di pesata: '+lavTxt(L) : ''; } };
 $('#ab-go').onclick=async()=>{ const nome=$('#ab-nome').value.trim(); if(!nome){ toast('Dai un nome al batch.'); return; }
   const rule=RULES[R.dest]; const id='b'+Date.now().toString(36);
   const body={nome, dataColata:$('#ab-data').value||todayISO(), dataTaglio:null, pesiTaglio:[], pani:R.pani||10, lossMin:9, lossMax:12, settMin:rule.settMin,
     note:$('#ab-note').value.trim(), pesate:[], creato:new Date().toISOString(), rForm:snapR(R), ricettaDati:cardFor(R), rid:R.id||null};
+  { if(!FST||fKey()!==('mrp-foglio:'+(R.id||slug(R.nome)||'nuova'))) fLoad(); const L=(()=>{ const ov=$('#sheet'); if(!ov.innerHTML){ ov.innerHTML=foglio(); } return fRiassunto(); })(); if(L) body.lav=L; }
   await bRun(()=>saveB(id,body),'Batch creato'); $('#reg-ov').hidden=true; showTab('batch'); };
 
 // ---------- acquisti ----------
@@ -1695,6 +1751,13 @@ function analyse(b){ const w0=avg(b.pesiTaglio); const pes=[...(b.pesate||[])].s
   const stable=rows.length>=2&&rows[rows.length-1].wk<1&&rows[rows.length-2].wk<1;
   if(loss>=min&&stable&&sett>=settMin) status='pronto'; else if(loss>=min-1||(rows.length>=1&&last.wk<1.5&&loss>=min-2)) status='quasi';
   return {w0,rows,last,loss,sett,min,max,settMin,status,target:[w0*(1-max/100),w0*(1-min/100)]}; }
+
+function lavTxt(L){ const p=[]; if(L.oli!=null) p.push('oli '+fmt(L.oli,0)+' °C'); if(L.lisc!=null) p.push('lisciva '+fmt(L.lisc,0)+' °C'); if(L.stanza!=null) p.push('stanza '+fmt(L.stanza,0)+' °C'); if(L.minTrace!=null) p.push('trace dopo '+fmt(L.minTrace,1)+' min');
+  if(L.cuore&&L.cuore.length) p.push('cuore stampo '+L.cuore.map(x=>x.min+'′ '+fmt(x.c,0)+' °C').join(', '));
+  const sc=Object.entries(L.pesi||{}).filter(([k,v])=>v.dose&&Math.abs(v.reale-v.dose)/v.dose>0.02&&Math.abs(v.reale-v.dose)>=0.5&&k!=='lattato').map(([k,v])=>keyName(k)+' '+(v.reale>v.dose?'+':'−')+fmt(Math.abs(v.reale-v.dose),1)+' g');
+  if(L.sfEff!=null) p.push('superfat effettivo '+fmt(L.sfEff,1)+' %'); if(sc.length) p.push('scarti: '+sc.join(', ')); const np=Object.keys(L.pesi||{}).length; if(np) p.push(np+' pesate registrate');
+  return p.join(' · ')||'nessun dato'; }
+function bLavReg(b){ return b.lav? `<div class="hint keep" style="margin-top:6px"><b>Lavorazione registrata:</b> ${esc(lavTxt(b.lav))}</div>` : ''; }
 const pzg=a=>`<span class="pzg">${a.map(v=>`<span>${v}</span>`).join('')}</span>`;
 function bChart(a){ const W=640,H=200,L=46,Rr=12,T=14,B=28; const xs=[0]; a.rows.forEach(r=>xs.push(xs[xs.length-1]+r.d)); const maxD=Math.max(84,...xs);
   const ys=[a.w0,...a.rows.map(x=>x.m)]; const yMin=Math.min(a.target[0]-2,...ys)-1, yMax=Math.max(...ys)+1;
@@ -1736,7 +1799,7 @@ function proveBlock(b){ const P=b.prove||[]; const last={}; P.forEach(p=>last[p.
       <div class="hint" data-pv-err style="color:var(--bad)" hidden></div>
       <div class="bt-acts"><button class="primary" data-act="prova-ok">Salva prova</button></div></div></details>`; }
 function bCard(b,S){ const el=document.createElement('div'); el.className='bt-card'; const r=b.ricettaDati; const cut=b.pesiTaglio&&b.pesiTaglio.length&&b.dataTaglio;
-  const recipeBlock=`<details><summary>Ricetta${b.modificata?' (modificata)':''}</summary>${r?bRecipe(r):'<div class="hint">Ricetta non disponibile.</div>'}
+  const recipeBlock=`<details><summary>Ricetta${b.modificata?' (modificata)':''}</summary>${bLavReg(b)}${r?bRecipe(r):'<div class="hint">Ricetta non disponibile.</div>'}
     <div class="bt-acts" style="justify-content:flex-start;margin-top:8px">${b.rForm?'<button data-act="label">Etichetta</button><button data-act="edit">Correggi la ricetta</button>':''}${b.ricettaOrig?'<button class="ghost" data-act="reset">Ripristina la ricetta originale</button>':''}</div></details>
     <details data-sec="lotti"><summary>Ingredienti e lotti</summary>${bLots(b,S)}</details>
     <details><summary>Costo</summary>${bCost(b,S)}</details>`;
