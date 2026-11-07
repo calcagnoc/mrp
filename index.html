@@ -33,7 +33,17 @@ h2{font-size:1rem;margin:0 0 8px;font-weight:700}
 h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 6px;font-weight:600}
 .num,.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;margin-top:14px}
-@media (max-width:860px){.layout{grid-template-columns:1fr}}
+@media (max-width:860px){.layout{grid-template-columns:1fr}
+.layout{display:block} .layout>.panel+.panel{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;border-top:0} .layout>#builder{border-bottom-left-radius:0;border-bottom-right-radius:0;padding-bottom:4px}
+#layout[data-rt=formula] [data-rt]:not([data-rt=formula]),#layout[data-rt=analisi] [data-rt]:not([data-rt=analisi]),#layout[data-rt=lav] [data-rt]:not([data-rt=lav]),#layout[data-rt=costi] [data-rt]:not([data-rt=costi]){display:none!important}
+#layout:not([data-rt=formula]) #verdict>h2{display:none}
+.rt-head{font-size:.82rem;color:var(--muted);margin:8px 0 2px} .rt-head b{color:var(--fg);font-size:1.05rem;display:block}
+.rt-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:8px -4px 10px;position:sticky;top:0;background:var(--surface);z-index:5}
+.rt-tabs button{flex:1;background:none;border:0;border-bottom:3px solid transparent;border-radius:0;padding:10px 2px;font-weight:600;color:var(--muted);font-size:.9rem;cursor:pointer}
+.rt-tabs button.on{color:var(--fg);border-bottom-color:var(--accent)}
+#semaforo .it .m{display:none} #semaforo .it.why .m{display:block} #semaforo .it.hid{display:none}
+#semaforo .wy{font-family:inherit;font-size:.76rem;color:var(--accent);font-weight:600;background:none;border:0;padding:0 0 0 8px;cursor:pointer;white-space:nowrap}
+#semaforo .it .val{display:flex;align-items:center}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
 button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:7px 12px}
 button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
@@ -312,20 +322,22 @@ optgroup{font-weight:700;font-style:normal}
 <div class="layout" id="layout" hidden>
 <div class="panel" id="builder">
   <div class="row" style="justify-content:space-between;align-items:center"><button class="sm ghost" id="btn-back">‹ Tutte le ricette</button><span style="display:flex;gap:6px"><button class="sm" id="btn-reg2">Avvia batch</button><button class="sm primary" id="btn-save2">Salva ricetta</button></span></div>
-  <h2>Ricetta</h2>
+  <div class="rt-head" id="rt-head"></div>
+  <div class="rt-tabs" role="tablist" id="rt-tabs"><button type="button" data-t="formula" class="on">Formula</button><button type="button" data-t="analisi">Analisi</button><button type="button" data-t="lav">Lavorazione</button><button type="button" data-t="costi">Costi</button></div>
+  <h2 data-rt="formula">Ricetta</h2>
   <div class="quick" id="quick" hidden></div>
-  <div class="row">
+  <div class="row" data-rt="formula">
     <label>Nome <input id="r-nome" placeholder="es. Corpo lavanda"></label>
     <label>Destinazione <select id="r-dest"></select></label>
     <label>Oli totali (g) <input id="r-tot" type="number" value="700" step="10" min="100"></label>
   </div>
-  <div class="row" style="margin-top:8px">
+  <div class="row" style="margin-top:8px" data-rt="formula">
     <label>Superfat % <input id="r-sf" type="number" step="0.5" value="8"></label>
     <label>Purezza NaOH % <input id="r-pur" type="number" step="0.5" value="100" min="85" max="100"></label>
     <label>Lisciva % NaOH <input id="r-conc" type="number" step="1" value="30" min="25" max="40"></label>
   </div>
 
-  <details class="sec" id="mold-box"><summary>Stampo: calcola la ricetta dalle misure</summary>
+  <details class="sec" id="mold-box" data-rt="lav"><summary>Stampo: calcola la ricetta dalle misure</summary>
     <div class="row" style="margin-top:8px">
       <label>Forma <select id="m-shape"><option value="rect">Rettangolare (interno)</option><option value="cyl">Cilindrico</option><option value="vol">Volume noto</option></select></label>
       <label id="m-l-w">Lunghezza (cm) <input id="m-l" type="number" step="0.1" value="24.6"></label>
@@ -350,7 +362,7 @@ optgroup{font-weight:700;font-style:normal}
     </div>
   </details>
 
-  <details class="sec" open><summary>Oli e grassi</summary>
+  <details class="sec" open data-rt="formula"><summary>Oli e grassi</summary>
   <div class="twrap"><table id="oil-table"><thead><tr><th>Olio</th><th class="n">%</th><th class="n">g</th><th class="n">SAP</th><th></th></tr></thead><tbody></tbody>
   <tfoot><tr><td class="tot">Totale</td><td class="n tot" id="pct-tot">0</td><td class="n tot" id="g-tot">0</td><td></td><td></td></tr></tfoot></table></div>
   <div class="row" style="margin-top:8px;align-items:end">
@@ -361,7 +373,7 @@ optgroup{font-weight:700;font-style:normal}
   <div class="hint">Gli oli senza profilo di acidi grassi (catalogo) entrano nel calcolo della soda ma non negli indicatori: viene segnalato.</div>
   </details>
 
-  <details class="sec"><summary>Additivi <span class="cnt" id="add-cnt"></span></summary>
+  <details class="sec" data-rt="formula"><summary>Additivi <span class="cnt" id="add-cnt"></span></summary>
   <div class="twrap"><table id="add-table"><thead><tr><th>Additivo</th><th class="n">%</th><th class="n">g</th><th class="hide-m">Quando</th><th></th></tr></thead><tbody></tbody></table></div>
   <div class="row" style="margin-top:8px;align-items:end">
     <label style="flex:3 1 220px">Aggiungi additivo <select id="add-pick"></select></label>
@@ -371,7 +383,7 @@ optgroup{font-weight:700;font-style:normal}
   <div id="add-note" class="hint"></div>
   </details>
 
-  <details class="sec" id="oe-box"><summary>Oli essenziali e allergeni <span class="cnt" id="oe-cnt"></span></summary>
+  <details class="sec" id="oe-box" data-rt="formula"><summary>Oli essenziali e allergeni <span class="cnt" id="oe-cnt"></span></summary>
   <div class="twrap"><table id="oe-table"><thead><tr><th>Olio essenziale</th><th class="n">g</th><th class="n">% oli</th><th></th></tr></thead><tbody></tbody></table></div>
   <div class="row" style="margin-top:8px;align-items:end">
     <label style="flex:3 1 200px">Aggiungi olio essenziale <select id="oe-pick"></select></label>
@@ -384,7 +396,7 @@ optgroup{font-weight:700;font-style:normal}
   <div id="al-note" class="hint" style="margin-top:6px"></div>
   </details>
 
-  <details class="sec" id="cost-box"><summary>Costo <span class="cnt" id="cost-cnt"></span></summary>
+  <details class="sec" id="cost-box" data-rt="costi" open><summary>Costo <span class="cnt" id="cost-cnt"></span></summary>
   <h4 class="mini">1 · Materie prime</h4>
   <div class="hint">Il prezzo viene dall'ultimo acquisto (spedizione compresa). Dove non c'è un acquisto puoi scriverlo a mano, al kg.</div>
   <div class="twrap"><table id="cost-table"><thead><tr><th>Ingrediente</th><th class="n">g</th><th class="n">€/kg</th><th class="n">€</th></tr></thead><tbody></tbody></table></div>
@@ -415,55 +427,47 @@ optgroup{font-weight:700;font-style:normal}
   </details>
 
 
-  <div class="actbar">
-  <div class="act-l">Questa ricetta</div>
-  <div class="mg-check" id="mg-check"></div>
-  <div class="row" style="justify-content:flex-end">
-    <button id="btn-sheet">Foglio di pesata</button>
-    <button id="btn-reg">Avvia batch</button>
-    <button id="btn-copy">Copia riepilogo</button>
-    <button id="btn-save" class="primary">Salva ricetta</button>
-  </div>
-  </div>
 </div>
 
 <div class="panel" id="verdict">
-  <h2>Calcolo</h2>
-  <div class="kv">
+  <h2 data-rt="formula">Calcolo</h2>
+  <div class="kv" data-rt="formula">
     <div class="box"><div class="v" id="o-naoh">—</div><div class="l">NaOH da pesare</div></div>
     <div class="box"><div class="v" id="o-acqua">—</div><div class="l">acqua demineralizzata</div></div>
     <div class="box"><div class="v" id="o-teo">—</div><div class="l">NaOH teorico (SAP)</div></div>
     <div class="box"><div class="v" id="o-batch">—</div><div class="l">peso batch</div></div>
   </div>
-  <div class="hint" id="o-detail" style="margin-top:6px"></div>
+  <div class="hint" id="o-detail" style="margin-top:6px" data-rt="formula"></div>
 
-  <details class="sec" open><summary>Lavorazione</summary>
+  <details class="sec" open data-rt="lav"><summary>Lavorazione <span class="cnt" id="lav-cnt"></span></summary>
   <div id="lav" style="margin-top:8px"></div>
   </details>
 
-  <details class="sec" open><summary>Profilo acidi grassi (sulla ricetta)</summary>
+  <details class="sec" open data-rt="analisi"><summary>Semaforo per la destinazione <span class="cnt" id="sem-cnt"></span></summary>
+  <div class="ind" id="semaforo"></div>
+  <button type="button" class="sm ghost" id="sem-all" hidden style="margin-top:6px"></button>
+  </details>
+
+  <details class="sec" open data-rt="analisi"><summary>Profilo acidi grassi (sulla ricetta)</summary>
   <div class="kv" id="profile"></div>
   <div class="hint" id="eut-note" style="margin-top:8px"></div>
-  <details class="sec sub" open><summary>Catene degli acidi grassi</summary><div id="chains" style="margin-top:8px"></div></details>
+  <details class="sec sub"><summary>Catene degli acidi grassi</summary><div id="chains" style="margin-top:8px"></div></details>
   <details class="sec sub"><summary>Dettaglio per acido</summary>
   <div class="twrap" style="margin-top:8px"><table id="fa-table"><thead><tr><th>Acido</th><th class="n">%</th><th>Principale fonte</th></tr></thead><tbody></tbody></table></div>
   </details></details>
 
-  <details class="sec" open><summary>Semaforo per la destinazione <span class="cnt" id="sem-cnt"></span></summary>
-  <div class="ind" id="semaforo"></div>
-  </details>
 
-  <details class="sec"><summary>Procedura consigliata</summary>
+  <details class="sec" data-rt="lav"><summary>Procedura consigliata <span class="cnt" id="proc-cnt"></span></summary>
   <ol class="steps" id="proc"></ol>
   </details>
 
-  <details class="sec" id="cmp-box"><summary>Confronta con un'altra ricetta</summary>
+  <details class="sec" id="cmp-box" data-rt="costi"><summary>Confronta con un'altra ricetta</summary>
   <div class="row" style="margin-top:8px"><label>Ricetta da confrontare <select id="cmp-pick"></select></label></div>
   <div class="twrap" style="margin-top:8px"><table class="cmp" id="cmp-table"></table></div>
   <div class="hint" style="margin-top:6px">Ogni ricetta è giudicata con le soglie della propria destinazione. Il costo per pane usa i tuoi prezzi e lo stesso numero di pani.</div>
   </details>
 
-  <details class="sec" id="consigliere" hidden><summary>Consigliere</summary>
+  <details class="sec" id="consigliere" hidden data-rt="analisi"><summary>Consigliere</summary>
     <div class="hint">Chiedi un parere sulla ricetta aperta: la domanda parte con ricetta, semaforo e Guida come contesto. Usa il tuo account Claude; alla prima domanda ti viene chiesto il consenso.</div>
     <div class="row" style="margin-top:8px;align-items:end">
       <label style="flex:3 1 220px">Domanda <input id="c-q" placeholder="es. Posso aggiungere l'indaco? Cosa cambia se tolgo il karité?"></label>
@@ -482,6 +486,16 @@ optgroup{font-weight:700;font-style:normal}
     <div id="c-fb" class="bt-acts" style="justify-content:flex-start;margin-top:6px" hidden><span class="hint">Questa risposta è</span><button class="sm" id="c-ok">Giusta</button><button class="sm" id="c-ko">Sbagliata, perché…</button></div>
     <div id="c-fbform" class="bt-form" hidden style="margin-top:6px"><label style="display:grid;gap:4px;font-size:.78rem;color:var(--muted)">Cosa c'è di sbagliato e qual è la regola giusta (una frase: diventa una lezione per il consigliere) <input id="c-fbtext" placeholder="es. il cocco al 20 % va bene per le mani normali, non proporre sempre il babassu"></label><div class="bt-acts"><button class="ghost" id="c-fbno">Annulla</button><button class="primary" id="c-fbok">Salva la lezione</button></div></div>
   </details>
+  <div class="actbar" style="margin-top:14px">
+  <div class="act-l">Questa ricetta</div>
+  <div class="mg-check" id="mg-check"></div>
+  <div class="row" style="justify-content:flex-end">
+    <button id="btn-sheet">Foglio di pesata</button>
+    <button id="btn-reg">Avvia batch</button>
+    <button id="btn-copy">Copia riepilogo</button>
+    <button id="btn-save" class="primary">Salva ricetta</button>
+  </div>
+  </div>
 </div>
 </div>
 
@@ -997,6 +1011,9 @@ function lavorazione(K){ const M=lavModel(K); if(!M) return null;
   const verd=(M.lenta?'Molto lenta: aspetta una trace leggera prima di dividere, i colori tendono a fondersi. ':'')+M.verdTxt+(M.bordo?' (al limite: decide quanto frulli)':'')+(M.gate?` Limite dato da ${M.gate}.`:'');
   const istr=[`Versa: oli ${M.oli} °C, lisciva ${M.lisc} °C. Gel e stampo: vedi procedura.`];
   return {M,P:M.P,verd,istr,avv,avvLong:avv.concat(M.note),istrLong:[`Oli a ${M.oli} °C, lisciva a ${M.lisc} °C.`, M.passoStampo]}; }
+let SEM_ALL=false, RT_TAB='formula';
+function setRT(t){ RT_TAB=t; const L=$('#layout'); if(L) L.dataset.rt=t; document.querySelectorAll('#rt-tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t===t)); try{ localStorage.setItem('mrp-rt',t); }catch(e){} }
+function rtHead(){ const h=$('#rt-head'); if(!h) return; const ds=$('#r-dest'); const dn=ds&&ds.selectedOptions[0]? ds.selectedOptions[0].text : ''; h.innerHTML=`<b>${esc(R.nome||'Nuova ricetta')}</b>${fmt(+R.tot||0,0)} g di oli · ${esc(dn)} · SF ${fmt(+R.sf||0)} % · soda ${fmt(+R.conc||0)} %`; }
 function renderLav(K){ const el=$('#lav'); if(!el) return; const L=lavorazione(K);
   if(!L){ el.innerHTML='<div class="hint">Aggiungi gli oli.</div>'; return; }
   const M=L.M, max=40, pos=Math.max(0,Math.min(100,M.P/max*100)), s=LAVP.soglie;
@@ -1004,7 +1021,7 @@ function renderLav(K){ const el=$('#lav'); if(!el) return; const L=lavorazione(K
   const top=M.contr.filter(c=>Math.abs(c.pts)>=0.5).sort((a,b)=>b.pts-a.pts);
   el.innerHTML=`<div class="lav-sc"><div class="lav-track">${zona(0,s.elab,'var(--c-slow)')}${zona(s.elab,s.semp,'var(--c-hard)')}${zona(s.semp,max,'var(--c-fast)')}<b style="left:${pos}%"></b></div>
   <div class="lav-leg"><span style="--c:var(--c-slow)">swirl elaborati ≤ ${s.elab}</span><span style="--c:var(--c-hard)">swirl semplici ≤ ${s.semp}</span><span style="--c:var(--c-fast)">pane pieno</span></div></div>
-  <div class="lav-v">Indice di velocità ${fmt(Math.max(0,M.P),1)} · ${esc(L.verd)}</div>
+  <div class="lav-v">Indice di velocità ${fmt(Math.max(0,M.P),1)} · ${esc(L.verd)}</div>${(()=>{ const lc=$('#lav-cnt'); if(lc) lc.textContent='· indice '+fmt(Math.max(0,M.P),1)+' · '+String(L.verd).split(/[.(,]/)[0].toLowerCase(); return ''; })()}
   <details class="sec sub"><summary>Da cosa viene l'indice</summary><table class="lav-t"><tbody>${top.map(c=>`<tr><td>${esc(c.lab)}</td><td class="n">${c.pts>=0?'+':'−'}${fmt(Math.abs(c.pts),1)}</td></tr>`).join('')}<tr><td><b>Totale</b></td><td class="n"><b>${fmt(M.P,1)}</b></td></tr></tbody></table></details>
 `; }
 
@@ -1050,9 +1067,11 @@ function renderOut(K){
   const ft=$('#fa-table tbody'); ft.innerHTML=''; if(K.profOK) FA.forEach(([k,n])=>{ const v=K.prof[k]; if(v<0.05) return; const tr=document.createElement('tr'); tr.innerHTML=`<td>${n}</td><td class="n">${fmt(v)}</td><td>${esc(mainSource(k,K.src))}</td>`; ft.appendChild(tr); });
   // semaforo
   const sm=$('#semaforo'); sm.innerHTML=''; if(!K.gSum){ sm.innerHTML='<div class="hint">Scegli una ricetta di riferimento o aggiungi oli.</div>'; }
-  else { const S=semaforo(K); const nb=S.filter(x=>x.cls==='bad').length, nw=S.filter(x=>x.cls==='warn').length; $('#sem-cnt').textContent = nb||nw? `· ${nb} rossi, ${nw} gialli` : '· tutto verde'; S.forEach(x=>{ const d=document.createElement('div'); d.className='it '+x.cls; d.innerHTML=`<div class="dot"></div><div><div class="t">${esc(x.t)}</div><div class="m">${esc(x.m)}</div></div><div class="val">${esc(x.val)}</div>`; sm.appendChild(d); }); }
+  else { const S=semaforo(K); const nb=S.filter(x=>x.cls==='bad').length, nw=S.filter(x=>x.cls==='warn').length; $('#sem-cnt').textContent = nb||nw? `· ${nb} rossi, ${nw} gialli` : '· tutto verde'; const green=x=>x.cls==='ok'||x.cls==='info'; const ng=S.filter(green).length;
+    S.slice().sort((a,c)=>(green(a)?1:0)-(green(c)?1:0)).forEach(x=>{ const d=document.createElement('div'); d.className='it '+x.cls+(green(x)&&!SEM_ALL?' hid':''); d.innerHTML=`<div class="dot"></div><div><div class="t">${esc(x.t)}</div><div class="m">${esc(x.m)}</div></div><div class="val">${esc(x.val)}${x.m?'<button type="button" class="wy">Perché?</button>':''}</div>`; const w=d.querySelector('.wy'); if(w) w.onclick=()=>{ d.classList.toggle('why'); w.textContent=d.classList.contains('why')?'Chiudi':'Perché?'; }; sm.appendChild(d); });
+    const sa=$('#sem-all'); if(sa){ sa.hidden=!ng||ng===S.length&&false; sa.textContent= SEM_ALL? 'Nascondi le voci verdi' : `Mostra anche ${ng===1?'la voce verde':'le '+ng+' voci verdi'}`; if(nb+nw===0&&!SEM_ALL) sm.insertAdjacentHTML('afterbegin','<div class="hint">Tutto nella fascia della destinazione.</div>'); } }
   // procedure
-  const pr=$('#proc'); pr.innerHTML=''; if(K.gSum) procedura(K).forEach(s=>{ const li=document.createElement('li'); li.textContent=s; pr.appendChild(li); });
+  const pr=$('#proc'); pr.innerHTML=''; let npr=0; if(K.gSum) procedura(K).forEach(s=>{ const li=document.createElement('li'); li.textContent=s; pr.appendChild(li); npr++; }); { const pc=$('#proc-cnt'); if(pc) pc.textContent= npr? '· '+npr+' passaggi' : ''; }
 }
 function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2200); }
@@ -2082,7 +2101,10 @@ const _ro=renderOut;
 renderOut=function(K){ K=K||calc(); _ro(K);
   const oeA=K.adds.findIndex(a=>a.id==='oe'); if(oeA>=0){ const inp=document.querySelector(`#add-table input[data-a="${oeA}"]`); if(inp&&document.activeElement!==inp) inp.value=K.adds[oeA].pct; }
   renderAllergens(K); renderCost(K); renderCmp(K); renderMagCheck(); renderQuick(K); };
-const _r2=render; render=function(){ const cp=$('#c-pani'); if(cp&&document.activeElement!==cp) cp.value=R.pani||10; renderOETable(); _r2(); };
+const _r2=render; render=function(){ const cp=$('#c-pani'); if(cp&&document.activeElement!==cp) cp.value=R.pani||10; renderOETable(); _r2(); try{ rtHead(); }catch(e){} };
+document.querySelectorAll('#rt-tabs button').forEach(x=>x.onclick=()=>{ setRT(x.dataset.t); const t=$('#rt-tabs'); if(t&&t.getBoundingClientRect().top<0) t.scrollIntoView({block:'start'}); });
+{ const sa=$('#sem-all'); if(sa) sa.onclick=()=>{ SEM_ALL=!SEM_ALL; render(); }; }
+{ let t='formula'; try{ t=localStorage.getItem('mrp-rt')||'formula'; }catch(e){} setRT(['formula','analisi','lav','costi'].includes(t)?t:'formula'); }
 fillCmp();
 
 loadTemplate(TEMPL[0]);
