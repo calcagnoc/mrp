@@ -260,6 +260,7 @@ td input.gin{width:72px}
 .sheet input.fx,.sheet input.ftg{width:100%;font:inherit;font-size:13px;padding:5px 6px;border:1px solid #bbb;border-radius:6px;background:#fff;color:#222;box-sizing:border-box} .sheet table.ftag{table-layout:fixed;width:100%} .sheet table.ftag td{vertical-align:top;font-size:12px} .sheet table.ftag .fl{display:block;font-size:11px;color:#555;margin-bottom:3px} .sheet table.ftag input{display:block;max-width:100%}
 .sheet table.controlli{table-layout:fixed;width:100%} .sheet table.controlli th:nth-child(2),.sheet table.controlli td:nth-child(2){width:150px} .sheet table.controlli th:nth-child(3),.sheet table.controlli td:nth-child(3){width:210px}
 @media print{ .sheet tr.fnext td:nth-child(2)::before{display:none} .sheet tr.fnext td:nth-child(2){box-shadow:none} }
+.sheet .fgo{margin:8px 0 2px;padding:8px 10px;border:1px solid #cfe0c3;background:#f3f7ef;border-radius:10px;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap} .sheet .fgo[hidden]{display:none}
 .sheet .fwarn{font-size:11px;font-weight:600} .sheet .fwarn.warn{color:#9a6a00} .sheet .fwarn.bad{color:#c0392b}
 .sheet ol.proc li{cursor:pointer;padding:2px 0} .sheet ol.proc li.fdone{color:#888;text-decoration:line-through}
 .sheet .fprog{position:sticky;top:0;z-index:3;display:flex;gap:10px;align-items:center;background:#f3f7ef;border:1px solid #cfe0c3;border-radius:10px;padding:6px 8px;margin:10px 0 4px;font-size:12.5px;white-space:nowrap;overflow-x:auto}
@@ -1380,6 +1381,7 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
     <tr><td>Lisciva prima di versare</td><td class="n">${T.lisc} °C</td><td class="blank"><input class="ft" data-ft="lisc" inputmode="decimal" placeholder="°C"></td><td class="blank"><span class="fora" data-fo="lisc"></span></td></tr>
     <tr><td>Emulsione stabile / trace</td><td class="small">${T.tipo==='base'?'2-5 min':'1-4 min'}</td><td class="blank"><span class="fmin" id="f-min"></span><span class="noprint"><button type="button" class="sm" id="f-unisci">Unisco ora</button> <button type="button" class="sm" id="f-trace">Trace!</button></span></td><td class="blank"><span class="fora" data-fo="unione"></span></td></tr>
     <tr><td>In stampo</td><td></td><td></td><td class="blank"><span class="fora" data-fo="stampo"></span> <button type="button" class="sm noprint" id="f-stampo">Versato ora</button></td></tr></table>
+    <div class="noprint fgo" id="f-go" hidden>Versato. <button type="button" class="sm primary" id="f-go-btn">Avvia il batch adesso</button> <span class="small">con i dati di questo foglio</span></div>
     ${(()=>{ let sw=false; try{ const M=lavModel(K,R); sw=M.cls===0&&!R.oli.some(o=>/^cera/.test(o.id)); }catch(e){}
       return sw? `<div class="small" style="margin-top:6px"><b>Swirl in freezer:</b> niente misura al cuore dello stampo, non aprire e non bucare. Si controlla al taglio: se c'è un anello più scuro, il gel è partito.</div>`
       : `<table style="margin-top:6px"><tr><th>Superficie stampo (facoltativo)</th>${[30,60,90,120,180].map(m=>`<th>${m} min</th>`).join('')}</tr><tr><td class="small">°C con termometro a infrarossi, attraverso la pellicola, senza aprire (sopra 85: togli la coperta)</td>${[0,1,2,3,4].map(i=>`<td class="blank"><input class="fc" data-fc="${i}" inputmode="decimal" placeholder="°C"></td>`).join('')}</tr></table>`; })()}`;
@@ -1428,12 +1430,14 @@ function fWire(){ const S=$('#sheet');
   const u=$('#f-unisci'), t=$('#f-trace'), s=$('#f-stampo');
   if(u) u.onclick=()=>{ FST.t0=Date.now(); FST.tt=null; fSave(); fMin(); fProg(); toast('Cronometro partito: premi «Trace!» quando arriva'); };
   if(t) t.onclick=()=>{ if(!FST.t0){ toast('Prima premi «Unisco ora».'); return; } FST.tt=Date.now(); fSave(); fMin(); fProg(); };
-  if(s) s.onclick=()=>{ FST.ore.stampo=Date.now(); fSave(); fMin(); };
+  if(s) s.onclick=()=>{ FST.ore.stampo=Date.now(); fSave(); fMin(); fGo(); };
+  { const g=$('#f-go-btn'); if(g) g.onclick=()=>$('#sh-reg').click(); } fGo();
   S.querySelectorAll('input.fx').forEach(i=>{ const k=i.dataset.fx; FST.ctrl=FST.ctrl||{}; if(FST.ctrl[k]!=null) i.value=FST.ctrl[k]; i.oninput=()=>{ FST.ctrl[k]=i.value.trim(); fSave(); fBatchSync(); }; });
   S.querySelectorAll('button.fxc').forEach(bt=>{ const k=bt.dataset.fx; FST.ctrl=FST.ctrl||{}; const paint=()=>{ const on=!!FST.ctrl[k]; bt.textContent=on?'✓':'☐'; bt.classList.toggle('on',on); }; bt.onclick=()=>{ FST.ctrl[k]=!FST.ctrl[k]; fSave(); paint(); fBatchSync(); }; paint(); });
   S.querySelectorAll('input.ftg').forEach(i=>{ const k=i.dataset.ftg; FST.tg=FST.tg||{}; if(FST.tg[k]!=null) i.value=FST.tg[k]; i.oninput=()=>{ FST.tg[k]=i.value.trim(); fSave(); fOre(); }; });
   const ts=$('#f-tsave'); if(ts) ts.onclick=fSalvaTaglio; fOre(); fNext();
   fMin(); fProg(); }
+function fGo(){ const g=$('#f-go'); if(!g) return; const bt=FST.bid&&(typeof BATCHES!=='undefined'?BATCHES:[]).find(x=>x.id===FST.bid); g.hidden=!(FST.ore&&FST.ore.stampo)||!!bt; }
 function fNext(){ const rows=[...document.querySelectorAll('#sheet tr[data-fk]')]; rows.forEach(r=>r.classList.remove('fnext')); const nx=rows.find(r=>!FST.done[r.dataset.fk]); if(nx) nx.classList.add('fnext'); }
 function fOre(){ const el=$('#f-ore'); if(!el) return; const tg=FST.tg||{}; const t0=FST.ore&&FST.ore.stampo? FST.ore.stampo : (FST.meta&&FST.meta.data? new Date(FST.meta.data+'T12:00:00').getTime() : null);
   if(!t0||!tg.data){ el.textContent='—'; return; } const t1=new Date(tg.data+'T'+(tg.ora||'12:00')+':00').getTime(); el.textContent= isNaN(t1)? '—' : fmt(Math.max(0,(t1-t0)/3600000),0)+' h'+(FST.ore&&FST.ore.stampo?'':' (circa: segna «Versato ora»)'); }
