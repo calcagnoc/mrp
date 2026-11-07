@@ -188,7 +188,7 @@ h4.mini{margin:12px 0 2px;font-size:.74rem;text-transform:uppercase;letter-spaci
 .rcost b{font-weight:600;color:var(--fg)} .rcost small{font-size:.72rem}
 .rdt{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:.82rem;margin-left:6px;white-space:nowrap} .rmain .rd{font-size:.76rem;color:var(--muted)}
 .rdel{align-self:center;min-width:36px}
-td.pz{white-space:normal;min-width:110px}
+td.pz{white-space:nowrap} td.pz .pzg{display:inline-grid;grid-template-columns:auto auto;gap:0 10px;font-size:.8rem;line-height:1.35;text-align:right}
 @media (max-width:640px){
   .hide-m{display:none}
   header{padding-block:14px 8px;align-items:center}
@@ -1695,11 +1695,12 @@ function analyse(b){ const w0=avg(b.pesiTaglio); const pes=[...(b.pesate||[])].s
   const stable=rows.length>=2&&rows[rows.length-1].wk<1&&rows[rows.length-2].wk<1;
   if(loss>=min&&stable&&sett>=settMin) status='pronto'; else if(loss>=min-1||(rows.length>=1&&last.wk<1.5&&loss>=min-2)) status='quasi';
   return {w0,rows,last,loss,sett,min,max,settMin,status,target:[w0*(1-max/100),w0*(1-min/100)]}; }
+const pzg=a=>`<span class="pzg">${a.map(v=>`<span>${v}</span>`).join('')}</span>`;
 function bChart(a){ const W=640,H=200,L=46,Rr=12,T=14,B=28; const xs=[0]; a.rows.forEach(r=>xs.push(xs[xs.length-1]+r.d)); const maxD=Math.max(84,...xs);
   const ys=[a.w0,...a.rows.map(x=>x.m)]; const yMin=Math.min(a.target[0]-2,...ys)-1, yMax=Math.max(...ys)+1;
   const X=d=>L+(d/maxD)*(W-L-Rr), Y=v=>T+(1-(v-yMin)/(yMax-yMin))*(H-T-B);
   let s=`<svg class="bt-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Peso medio nel tempo"><rect x="${L}" y="${Y(a.target[1])}" width="${W-L-Rr}" height="${Math.max(2,Y(a.target[0])-Y(a.target[1]))}" fill="var(--soft-ok)"/>`;
-  for(let wk=0;wk<=maxD/7;wk+=2){ const x=X(wk*7); s+=`<line x1="${x}" y1="${T}" x2="${x}" y2="${H-B}" stroke="var(--line)"/><text x="${x}" y="${H-10}" font-size="14" fill="var(--muted)" text-anchor="middle" font-family="var(--mono)">${wk} sett.</text>`; }
+  for(let wk=0;wk<=maxD/7;wk+=2){ const x=X(wk*7); s+=`<line x1="${x}" y1="${T}" x2="${x}" y2="${H-B}" stroke="var(--line)"/><text x="${x}" y="${H-10}" font-size="14" fill="var(--muted)" text-anchor="${wk===0?'start':x>W-Rr-40?'end':'middle'}" font-family="var(--mono)">${wk}${x>W-Rr-40?' sett.':''}</text>`; }
   for(const v of [yMax,(yMax+yMin)/2,yMin+1]) s+=`<text x="${L-6}" y="${Y(v)+3}" font-size="14" fill="var(--muted)" text-anchor="end" font-family="var(--mono)">${fmt(v,0)}</text>`;
   s+=`<path d="${xs.map((d,i)=>`${i?'L':'M'}${X(d).toFixed(1)},${Y(ys[i]).toFixed(1)}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
   xs.forEach((d,i)=>{ s+=`<circle cx="${X(d)}" cy="${Y(ys[i])}" r="${i===xs.length-1?4.5:3}" fill="${i===xs.length-1?'var(--accent)':'var(--surface)'}" stroke="var(--accent)" stroke-width="2"/>`; });
@@ -1772,15 +1773,15 @@ function bCard(b,S){ const el=document.createElement('div'); el.className='bt-ca
       ${b.note?`<div class="hint keep" style="margin-top:10px">${esc(b.note)}</div>`:''}
       <details open><summary>Pesate</summary>${bChart(a)}${stimaLine(b)}
         <div class="twrap"><table><thead><tr><th>Data</th><th class="hide-m">Giorni</th><th class="n hide-m">Pani (g)</th><th class="n">Media</th><th class="n">Δ totale</th><th class="n">Δ / sett.</th><th></th></tr></thead><tbody>
-          ${b.rifilato?`<tr><td>${fmtD(b.dataTaglio)} <span class="hint">taglio</span></td><td class="hide-m">0</td><td class="n pz hide-m">${(b.rifilato.pesiPrima||[]).map(x=>fmt(x,2)).join(' · ')}</td><td class="n">${fmt(avg(b.rifilato.pesiPrima||[]),2)}</td><td class="n">—</td><td class="n">—</td><td></td></tr>
-          <tr><td>${fmtD(b.rifilato.data)} <span class="hint">rifilatura · nuova base</span></td><td class="hide-m">${ddays(b.dataTaglio,b.rifilato.data)}</td><td class="n pz hide-m">${b.pesiTaglio.map(x=>fmt(x,2)).join(' · ')}</td><td class="n">${fmt(a.w0,2)}</td><td class="n">0 %</td><td class="n">—</td><td><button class="sm ghost" data-act="undo-rifila" title="Annulla la rifilatura e torna ai pesi del taglio">✕</button></td></tr>`
-          :`<tr><td>${fmtD(b.dataTaglio)} <span class="hint">taglio</span></td><td class="hide-m">0</td><td class="n pz hide-m">${b.pesiTaglio.map(x=>fmt(x,2)).join(' · ')}</td><td class="n">${fmt(a.w0,2)}</td><td class="n">—</td><td class="n">—</td><td></td></tr>`}
-          ${a.rows.map(x=>`<tr><td>${fmtD(x.data)}</td><td class="hide-m">${ddays(b.dataTaglio,x.data)}</td><td class="n pz hide-m">${x.pesi.map(y=>y==null?'—':fmt(y,2)).join(' · ')}</td><td class="n">${fmt(x.m,2)}</td><td class="n">−${fmt(x.loss)} %</td><td class="n ${x.wk<1?'good':''}">${fmt(x.wk)} %</td><td><button class="sm ghost" data-act="del-pesata" data-pd="${esc(x.data)}" title="Elimina questa pesata">✕</button></td></tr>`).join('')}
+          ${b.rifilato?`<tr><td>${fmtD(b.dataTaglio)} <span class="hint">taglio</span></td><td class="hide-m">0</td><td class="n pz hide-m">${pzg((b.rifilato.pesiPrima||[]).map(x=>fmt(x,2)))}</td><td class="n">${fmt(avg(b.rifilato.pesiPrima||[]),2)}</td><td class="n">—</td><td class="n">—</td><td></td></tr>
+          <tr><td>${fmtD(b.rifilato.data)} <span class="hint">rifilatura · nuova base</span></td><td class="hide-m">${ddays(b.dataTaglio,b.rifilato.data)}</td><td class="n pz hide-m">${pzg(b.pesiTaglio.map(x=>fmt(x,2)))}</td><td class="n">${fmt(a.w0,2)}</td><td class="n">0 %</td><td class="n">—</td><td><button class="sm ghost" data-act="undo-rifila" title="Annulla la rifilatura e torna ai pesi del taglio">✕</button></td></tr>`
+          :`<tr><td>${fmtD(b.dataTaglio)} <span class="hint">taglio</span></td><td class="hide-m">0</td><td class="n pz hide-m">${pzg(b.pesiTaglio.map(x=>fmt(x,2)))}</td><td class="n">${fmt(a.w0,2)}</td><td class="n">—</td><td class="n">—</td><td></td></tr>`}
+          ${a.rows.map(x=>`<tr><td>${fmtD(x.data)}</td><td class="hide-m">${ddays(b.dataTaglio,x.data)}</td><td class="n pz hide-m">${pzg(x.pesi.map(y=>y==null?'—':fmt(y,2)))}</td><td class="n">${fmt(x.m,2)}</td><td class="n">−${fmt(x.loss)} %</td><td class="n ${x.wk<1?'good':''}">${fmt(x.wk)} %</td><td><button class="sm ghost" data-act="del-pesata" data-pd="${esc(x.data)}" title="Elimina questa pesata">✕</button></td></tr>`).join('')}
         </tbody></table></div>
         <div class="bt-form" data-role="pesata"><div class="row"><label>Data <input type="date" data-p="data" value="${todayISO()}"></label></div>
           <div class="bt-w">${b.pesiTaglio.map((_,i)=>`<label>Pane ${i+1}<input type="number" step="0.01" inputmode="decimal" data-p="p${i}" placeholder="g"></label>`).join('')}</div>
           <div class="bt-acts"><button data-act="rifila-open" title="Dopo una rifilatura: nuovi pesi di base">Ripesa</button><button class="primary" data-act="add">Aggiungi pesata</button></div></div>
-        <div class="bt-form" data-role="rifila" hidden style="margin-top:8px"><div class="hint"><b>Ripesa dopo rifilatura.</b> Se hai pareggiato i pani, i pesi al taglio non valgono più: i pesi di oggi diventano la nuova base del calo e le pesate precedenti a questa data vengono tolte.${b.rifilato?` <b>Già rifilato il ${fmtD(b.rifilato.data)}</b> (pesi al taglio originali: ${(b.rifilato.pesiPrima||[]).map(x=>fmt(x,2)).join(' · ')}).`:''}</div>
+        <div class="bt-form" data-role="rifila" hidden style="margin-top:8px"><div class="hint"><b>Ripesa dopo rifilatura.</b> Se hai pareggiato i pani, i pesi al taglio non valgono più: i pesi di oggi diventano la nuova base del calo e le pesate precedenti a questa data vengono tolte.${b.rifilato?` <b>Già rifilato il ${fmtD(b.rifilato.data)}</b> (pesi al taglio originali: ${pzg((b.rifilato.pesiPrima||[]).map(x=>fmt(x,2)))}).`:''}</div>
       <div class="row"><label>Data <input type="date" data-r="data" value="${todayISO()}"></label></div>
       <div class="row">${[0,1,2,3].map(i=>`<label>Pane ${i+1} <input type="number" step="0.01" data-r="p${i}" placeholder="g"></label>`).join('')}</div>
       <div class="bt-acts"><button class="ghost" data-act="rifila-close">Annulla</button><button class="primary" data-act="rifila">Salva i pesi dopo rifilatura</button></div></div></details>${recipeBlock}${paniBlock(b)}${proveBlock(b)}${mgmt}`; }
