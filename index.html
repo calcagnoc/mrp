@@ -1014,7 +1014,7 @@ function lavorazione(K){ const M=lavModel(K); if(!M) return null;
   return {M,P:M.P,verd,istr,avv,avvLong:avv.concat(M.note),istrLong:[`Oli a ${M.oli} °C, lisciva a ${M.lisc} °C.`, M.passoStampo]}; }
 let SEM_ALL=false, RT_TAB='formula';
 function setRT(t){ RT_TAB=t; const L=$('#layout'); if(L) L.dataset.rt=t; document.querySelectorAll('#rt-tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t===t)); try{ localStorage.setItem('mrp-rt',t); }catch(e){} }
-function rtHead(){ const h=$('#rt-head'); if(!h) return; const ds=$('#r-dest'); const dn=ds&&ds.selectedOptions[0]? ds.selectedOptions[0].text : ''; h.innerHTML=`<b>${esc(R.nome||'Nuova ricetta')}</b>${fmt(+R.tot||0,0)} g di oli · ${esc(dn)} · SF ${fmt(+R.sf||0)} % · soda ${fmt(+R.conc||0)} %`; }
+function rtHead(){ const h=$('#rt-head'); if(!h) return; const ds=$('#r-dest'); const dn=ds&&ds.selectedOptions[0]? ds.selectedOptions[0].text : ''; h.innerHTML=`<b>${esc(R.nome||'Nuova ricetta')}</b>`; }
 function renderLav(K){ const el=$('#lav'); if(!el) return; const L=lavorazione(K);
   if(!L){ el.innerHTML='<div class="hint">Aggiungi gli oli.</div>'; return; }
   const M=L.M, max=40, pos=Math.max(0,Math.min(100,M.P/max*100)), s=LAVP.soglie;
