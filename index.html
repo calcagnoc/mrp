@@ -247,8 +247,8 @@ td input.gin{width:72px}
 .sheet .small{font-size:11px;color:#555}
 .sheet .lines{border-bottom:1px solid #bbb;height:22px}
 .sheet .lot{font-size:10px;color:#555}
-.sheet .fchk{background:none;border:1.5px solid #888;border-radius:6px;width:26px;height:26px;padding:0;font-size:15px;line-height:1;cursor:pointer;color:#2e7d32}
-.sheet tr.fdone td{background:none} .sheet tr.fdone td:not(.box):not(.blank){color:#8a8a8a} .sheet tr.fdone .fchk{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.sheet .fchk{background:#fff;border:1.5px solid #555;border-radius:2px;width:22px;height:22px;padding:0;font-size:16px;font-weight:700;line-height:1;cursor:pointer;color:#2e7d32}
+.sheet tr.fdone td{background:none} .sheet tr.fdone td:not(.box):not(.blank){color:#8a8a8a} .sheet tr.fdone .fchk{background:#fff;border-color:#2e7d32;color:#2e7d32}
 .sheet input.fin,.sheet input.ft,.sheet input.fc,.sheet input.fm{width:100%;max-width:90px;font:inherit;font-family:var(--mono);font-size:13px;padding:5px 6px;border:1px solid #bbb;border-radius:6px;background:#fff;color:#222}
 .sheet input.fm{max-width:140px} .sheet .fmeta td{font-size:12px}
 .sheet table.ing{table-layout:fixed;width:100%} .sheet table.ing td.small{white-space:normal;word-break:break-word}
@@ -256,7 +256,7 @@ td input.gin{width:72px}
 .sheet table.ing th:nth-child(4),.sheet table.ing td:nth-child(4){width:104px} .sheet table.ing th:nth-child(5),.sheet table.ing td:nth-child(5){width:190px}
 .sheet table.ing td.blank input{max-width:100%} .sheet table.ing td.n{white-space:normal} .sheet table.ing td:nth-child(2){overflow-wrap:anywhere;white-space:normal} .sheet table.ing .lot{white-space:normal;padding-right:6px}
 
-.sheet .fchk.on{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.sheet .fchk.on{background:#fff;border-color:#2e7d32;color:#2e7d32}
 .sheet input.fx,.sheet input.ftg{width:100%;font:inherit;font-size:13px;padding:5px 6px;border:1px solid #bbb;border-radius:6px;background:#fff;color:#222;box-sizing:border-box} .sheet table.ftag{table-layout:fixed;width:100%} .sheet table.ftag td{vertical-align:top;font-size:12px} .sheet table.ftag .fl{display:block;font-size:11px;color:#555;margin-bottom:3px} .sheet table.ftag input{display:block;max-width:100%}
 .sheet table.controlli{table-layout:fixed;width:100%} .sheet table.controlli th:nth-child(2),.sheet table.controlli td:nth-child(2){width:150px} .sheet table.controlli th:nth-child(3),.sheet table.controlli td:nth-child(3){width:210px}
 @media print{ .sheet tr.fnext td:nth-child(2)::before{display:none} }
@@ -1359,7 +1359,7 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
   const disp=K.adds.filter(a=>(a.d.solido&&['Argilla','Polvere','Colorante'].includes(a.d.cat))||a.id==='calendula').map(a=>({a, og: a.id==='calendula'? 20 : Math.max(20, Math.round(a.g*2.5/5)*5)}));
   let S0=null; try{ S0=magState(); }catch(e){}
   const lotHint=key=>{ if(!S0||!key) return ''; const P=S0.P[ckey(key)]||S0.P[key]; if(!P) return ''; const l=P.lots.filter(x=>x.rest>0.5).sort((x,y)=>(x.data||'').localeCompare(y.data||''))[0]; return l? `<div class="lot">lotto: ${esc(l.desc||l.nome)} · ${esc(l.forn||'')} ${fmtD(l.data)}${l.lotto?' · n. '+esc(l.lotto):''}${l.scad?' · '+esc(scadTxt(l.scad)):''}</div>` : ''; };
-  const row=(nome,g,extra,key)=>{ const rk=key||slug(String(nome).replace(/<[^>]+>/g,'')); const dn=fnum(String(g).replace(/<[^>]+>/g,' ').trim().split(/\s/)[0]); return `<tr data-fk="${esc(rk)}" data-dose="${isNaN(dn)?'':dn}"><td class="box"><button type="button" class="fchk" aria-label="Pesato">☐</button></td><td>${nome}<div class="fwarn"></div></td><td class="n">${g}</td><td class="blank"><input class="fin" inputmode="decimal" placeholder="g" aria-label="Grammi pesati"></td><td class="small">${extra||''}</td></tr>`; };
+  const row=(nome,g,extra,key)=>{ const rk=key||slug(String(nome).replace(/<[^>]+>/g,'')); const dn=fnum(String(g).replace(/<[^>]+>/g,' ').trim().split(/\s/)[0]); return `<tr data-fk="${esc(rk)}" data-dose="${isNaN(dn)?'':dn}"><td class="box"><button type="button" class="fchk" aria-label="Pesato"></button></td><td>${nome}<div class="fwarn"></div></td><td class="n">${g}</td><td class="blank"><input class="fin" inputmode="decimal" placeholder="g" aria-label="Grammi pesati"></td><td class="small">${extra||''}</td></tr>`; };
   const head='<tr><th></th><th>Ingrediente</th><th>Dose</th><th class="blank">Pesato</th><th>Note</th></tr>';
   const g1=x=>fmt(x,1)+' g', g0=x=>fmt(x,0)+' g';
   const oli=K.adds.filter(a=>where(a)==='oli'), acq=K.adds.filter(a=>where(a)==='acqua'), lis=K.adds.filter(a=>where(a)==='lisciva'), tr=K.adds.filter(a=>where(a)==='trace');
@@ -1392,7 +1392,7 @@ function foglio(){ const K=calc(), T=temps(), rule=RULES[R.dest];
       return sw? `<div class="small" style="margin-top:6px"><b>Swirl in freezer:</b> niente misura al cuore dello stampo, non aprire e non bucare. Si controlla al taglio: se c'è un anello più scuro, il gel è partito.</div>`
       : `<table style="margin-top:6px"><tr><th>Superficie stampo (facoltativo)</th>${[30,60,90,120,180].map(m=>`<th>${m} min</th>`).join('')}</tr><tr><td class="small">°C con termometro a infrarossi, attraverso la pellicola, senza aprire (sopra 85: togli la coperta)</td>${[0,1,2,3,4].map(i=>`<td class="blank"><input class="fc" data-fc="${i}" inputmode="decimal" placeholder="°C"></td>`).join('')}</tr></table>`; })()}`;
   h+=`<h3>Controlli e firma</h3><table class="controlli"><tr><th>Controllo</th><th>Atteso</th><th>Reale</th></tr>
-    <tr><td>Bilancia verificata (tara, peso noto)</td><td class="small">prima di pesare</td><td class="blank"><button type="button" class="fchk fxc" data-fx="bilancia">☐</button></td></tr>
+    <tr><td>Bilancia verificata (tara, peso noto)</td><td class="small">prima di pesare</td><td class="blank"><button type="button" class="fchk fxc" data-fx="bilancia"></button></td></tr>
     <tr><td>pH a 48 h (cartina pH-Fix 7,0-14,0 sulla soluzione all'1 %)</td><td class="small">fino a 11 normale · sopra 11,5 troppa soda</td><td class="blank"><input class="fx" data-fx="ph48" inputmode="decimal" placeholder="es. 10,5"></td></tr>
     <tr><td>pH a fine cura (stesso metodo)</td><td class="small">9,5-10,5</td><td class="blank"><input class="fx" data-fx="phfine" inputmode="decimal" placeholder="pH"></td></tr>
     <tr><td>Aspetto (crepe, macchie, polvere di soda)</td><td class="small">nessuno</td><td class="blank"><input class="fx" data-fx="aspetto" placeholder="es. nessuno"></td></tr>
@@ -1434,10 +1434,10 @@ function confirmTwice(btn){ if(btn.dataset.sure==='1') return true; btn.dataset.
 function fMin(){ const m=$('#f-min'); if(!m) return; m.textContent= FST.t0&&FST.tt? fmt((FST.tt-FST.t0)/60000,1)+' min ' : FST.t0? 'in corso… ' : ''; document.querySelectorAll('#sheet [data-fo]').forEach(s=>{ const k=s.dataset.fo; s.textContent= k==='unione'? (FST.t0? hhmm(FST.t0)+(FST.tt?' → '+hhmm(FST.tt):'') : '') : (FST.ore[k]? hhmm(FST.ore[k]) : ''); }); }
 function fWire(){ const S=$('#sheet');
   S.querySelectorAll('tr[data-fk]').forEach(tr=>{ const k=tr.dataset.fk, bt=tr.querySelector('.fchk'), inp=tr.querySelector('.fin');
-    const paint=()=>{ const on=!!FST.done[k]; tr.classList.toggle('fdone',on); bt.textContent=on?'✓':'☐'; };
-    bt.onclick=()=>{ FST.done[k]=!FST.done[k]; fSave(); paint(); fProg(); fNext(); if(FST.done[k]) fSweep(tr); };
+    const paint=()=>{ const on=!!FST.done[k]; tr.classList.toggle('fdone',on); bt.textContent=on?'✓':''; };
+    bt.onclick=()=>{ if(tr.dataset.sw) return; FST.done[k]=!FST.done[k]; fSave(); if(FST.done[k]) fSweep(tr,()=>{ paint(); fProg(); fNext(); }); else { paint(); fProg(); fNext(); } };
     if(FST.pesi[k]!=null) inp.value=FST.pesi[k];
-    inp.oninput=()=>{ FST.pesi[k]=inp.value.trim(); if(inp.value.trim()&&!FST.done[k]){ FST.done[k]=true; paint(); fProg(); fNext(); fSweep(tr); } fSave(); fWarn(tr); };
+    inp.oninput=()=>{ FST.pesi[k]=inp.value.trim(); if(inp.value.trim()&&!FST.done[k]&&!tr.dataset.sw){ FST.done[k]=true; fSweep(tr,()=>{ paint(); fProg(); fNext(); }); } fSave(); fWarn(tr); };
     paint(); fWarn(tr); });
   S.querySelectorAll('li[data-fs]').forEach(li=>{ const i=li.dataset.fs; li.classList.toggle('fdone',!!FST.steps[i]); li.onclick=()=>{ FST.steps[i]=!FST.steps[i]; li.classList.toggle('fdone',!!FST.steps[i]); fSave(); fProg(); }; });
   S.querySelectorAll('input.ft').forEach(i=>{ const k=i.dataset.ft; if(FST.t[k]!=null) i.value=FST.t[k]; i.oninput=()=>{ FST.t[k]=i.value.trim(); if(i.value.trim()) FST.ore[k]=FST.ore[k]||Date.now(); fSave(); fMin(); }; });
@@ -1449,12 +1449,12 @@ function fWire(){ const S=$('#sheet');
   if(s) s.onclick=()=>{ FST.ore.stampo=Date.now(); fSave(); fMin(); fGo(); };
   { const g=$('#f-go-btn'); if(g) g.onclick=()=>$('#sh-reg').click(); } fGo();
   S.querySelectorAll('input.fx').forEach(i=>{ const k=i.dataset.fx; FST.ctrl=FST.ctrl||{}; if(FST.ctrl[k]!=null) i.value=FST.ctrl[k]; i.oninput=()=>{ FST.ctrl[k]=i.value.trim(); fSave(); fBatchSync(); }; });
-  S.querySelectorAll('button.fxc').forEach(bt=>{ const k=bt.dataset.fx; FST.ctrl=FST.ctrl||{}; const paint=()=>{ const on=!!FST.ctrl[k]; bt.textContent=on?'✓':'☐'; bt.classList.toggle('on',on); }; bt.onclick=()=>{ FST.ctrl[k]=!FST.ctrl[k]; fSave(); paint(); fBatchSync(); }; paint(); });
+  S.querySelectorAll('button.fxc').forEach(bt=>{ const k=bt.dataset.fx; FST.ctrl=FST.ctrl||{}; const paint=()=>{ const on=!!FST.ctrl[k]; bt.textContent=on?'✓':''; bt.classList.toggle('on',on); }; bt.onclick=()=>{ FST.ctrl[k]=!FST.ctrl[k]; fSave(); paint(); fBatchSync(); }; paint(); });
   S.querySelectorAll('input.ftg').forEach(i=>{ const k=i.dataset.ftg; FST.tg=FST.tg||{}; if(FST.tg[k]!=null) i.value=FST.tg[k]; i.oninput=()=>{ FST.tg[k]=i.value.trim(); fSave(); fOre(); }; });
   const ts=$('#f-tsave'); if(ts) ts.onclick=fSalvaTaglio; fOre(); fNext();
   fMin(); fProg(); }
 function fGo(){ const g=$('#f-go'); if(!g) return; const bt=FST.bid&&(typeof BATCHES!=='undefined'?BATCHES:[]).find(x=>x.id===FST.bid); g.hidden=!(FST.ore&&FST.ore.stampo)||!!bt; }
-function fSweep(tr){ const S=$('#sheet'); if(!S||!tr) return; const a=S.getBoundingClientRect(), r=tr.getBoundingClientRect(); const d=document.createElement('div'); d.className='fsw'; d.style.left=(r.left-a.left)+'px'; d.style.top=(r.top-a.top)+'px'; d.style.width=r.width+'px'; d.style.height=r.height+'px'; S.appendChild(d); setTimeout(()=>d.remove(),2600); }
+function fSweep(tr,done){ const S=$('#sheet'); const fine=()=>{ delete tr.dataset.sw; if(done) done(); }; if(!S||!tr||matchMedia('(prefers-reduced-motion: reduce)').matches){ fine(); return; } tr.dataset.sw='1'; setTimeout(fine,1700); const a=S.getBoundingClientRect(), r=tr.getBoundingClientRect(); const d=document.createElement('div'); d.className='fsw'; d.style.left=(r.left-a.left)+'px'; d.style.top=(r.top-a.top)+'px'; d.style.width=r.width+'px'; d.style.height=r.height+'px'; S.appendChild(d); setTimeout(()=>d.remove(),2600); }
 function fNext(){ const rows=[...document.querySelectorAll('#sheet tr[data-fk]')]; rows.forEach(r=>r.classList.remove('fnext')); const nx=rows.find(r=>!FST.done[r.dataset.fk]); if(nx) nx.classList.add('fnext'); }
 function fOre(){ const el=$('#f-ore'); if(!el) return; const tg=FST.tg||{}; const t0=FST.ore&&FST.ore.stampo? FST.ore.stampo : (FST.meta&&FST.meta.data? new Date(FST.meta.data+'T12:00:00').getTime() : null);
   if(!t0||!tg.data){ el.textContent='—'; return; } const t1=new Date(tg.data+'T'+(tg.ora||'12:00')+':00').getTime(); el.textContent= isNaN(t1)? '—' : fmt(Math.max(0,(t1-t0)/3600000),0)+' h'+(FST.ore&&FST.ore.stampo?'':' (circa: segna «Versato ora»)'); }
