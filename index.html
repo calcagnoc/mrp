@@ -1326,47 +1326,77 @@ function renderCost(K){ const pani=+$('#c-pani').value||10, extra=+$('#c-extra')
 $('#c-pani').addEventListener('input',()=>{ R.pani=+$('#c-pani').value||10; renderOut(); try{ renderSaved(); }catch(e){} }); $('#c-extra').addEventListener('input',()=>renderOut());
 
 
-// ---------- come risparmiare: suggerimenti calcolati, mai applicati da soli ----------
-const SAVE_GRP={ duri:['cacao','karite_burro','palma','mango'], laurici:['cocco_copra','babassu'], oleici:['macadamia','oliva_vergine','girasole_75_oleico','mandorle_dolci'] };
-const UNSAP={karite_burro:[4,11],cacao:[0.2,0.4],palma:[0.3,1],cocco_copra:[0.1,0.5],babassu:[0.1,0.5],macadamia:[0.3,0.7],oliva_vergine:[0.5,1.5],girasole_75_oleico:[0.5,1.5],mandorle_dolci:[0.3,0.8],mango:[1,3],avocado:[2,6],riso:[3,5],ricino:[0.5,1],oliva_sansa:[1,3],sansa_oliva:[1,3]};
-const SAVE_NOTE={ 'cacao>karite_burro':'il karité ha molti più insaponificabili del cacao: pane un filo più morbido, sensazione più grassa (meno se è raffinato)',
-  'cacao>palma':'a parità di saturi il palma è un po’ meno duro del cacao: cristallizza su un intervallo più largo',
-  'karite_burro>palma':'meno insaponificabili: pane un filo più duro e meno "nutriente"', 'karite_burro>cacao':'meno insaponificabili, pane più duro',
-  'babassu>cocco_copra':'stessi laurici in pratica: differenza minima', 'cocco_copra>babassu':'stessi laurici in pratica: differenza minima',
-  'macadamia>oliva_vergine':'perdi il palmitoleico della macadamia; l’oliva rallenta la trace e allunga la cura',
-  'macadamia>girasole_75_oleico':'perdi il palmitoleico; più polinsaturi: il ROE diventa ancora più importante',
-  'macadamia>mandorle_dolci':'perdi il palmitoleico; più linoleico' };
+// ---------- come risparmiare (rivisto il 8/11/2026 con 6 chimici indipendenti, l_0066) ----------
+// Regole: niente sotto la soglia di rumore; niente superfat, lisciva, lattato/sale, "pane in più", ROE e chelanti (non sono risparmi reali).
+const SV_MIN=0.05; // €/pane
+const SV_FUNZ={ // dose che serve per la funzione nel sapone a risciacquo
+  calendula:{min:0.5, lv:'doc', perche:'nel sapone a risciacquo resta circa l’1 % del prodotto sulla pelle: la calendula CO2 dà soprattutto il colore giallo tenue, che a 0,5 % con gel completo è uguale'},
+  aritha:{min:0, lv:'doc', perche:'le saponine dell’aritha si distruggono a pH 12 (l_0009): nel sapone non hanno funzione'},
+  vite:{min:0, lv:'doc', perche:'la vitamina E è distrutta dalla soda (Dunn): nel sapone non protegge niente; la protezione la fa il ROE'},
+  bambu:{min:1.0, lv:'parere', perche:'sotto l’1 % sugli oli la grana non si sente più'},
+  caolino:{min:1.0, lv:'doc', perche:'all’1 % dà già la cremosità della schiuma; oltre non migliora'},
+  illite:{min:1.0, lv:'doc', perche:'all’1 % il verde è già visibile'},
+  argilla_rosa:{min:1.5, lv:'doc', perche:'all’1-2 % il rosa è già visibile'},
+  rhassoul:{min:1.0, lv:'doc', perche:'colore e scorrevolezza già all’1 %'},
+  montmorillonite:{min:1.0, lv:'doc', perche:'colore già all’1 %'},
+  carbone:{min:0.5, lv:'parere', perche:'grigio scuro già a 0,3-0,5 %'} };
+const SV_OEMIN={corpo:2.0, mani:2.0, piedi:2.0, swirl:2.0, viso_secca:1.0, viso_grassa:1.0, viso:1.0};
+const SV_SHELF={ // mesi a confezione aperta (l_0066: Fatemi-Hammond, Kaijser 2000)
+  cocco_copra:18, babassu:18, cacao:18, ricino:18, karite_burro:12, mango:12, macadamia:6, palma:9, oliva_sansa:6, sansa_oliva:6, oliva_vergine:6, girasole_75_oleico:6, avocado:6, nem_neem:6, mandorle_dolci:4, riso:4 };
 function renderSave(K){ const el=$('#save'); if(!el) return; const pani=+R.pani||+$('#c-pani').value||10;
   if(!K.gSum){ el.innerHTML=''; $('#save-cnt').textContent=''; return; }
   const C0=costo(K,R,pani,0); if(C0.miss>=C0.L.length){ el.innerHTML='<div class="hint">Servono i prezzi d’acquisto per suggerire risparmi.</div>'; return; }
-  const out=[]; const tag=(t)=>`<span class="stag ${t==='calcolo'?'c':t==='parere'?'p':'t'}">${t==='calcolo'?'calcolo':t==='parere'?'parere':'da provare su un batch'}</span>`;
+  const LV={calc:['c','calcolo'], doc:['t','documentato · da provare'], prova:['t','da provare su un batch'], parere:['p','parere']};
+  const tag=k=>`<span class="stag ${LV[k][0]}">${LV[k][1]}</span>`;
+  const gFin=(K.batch-K.acqua)/0.88; const cpg=C0.tot/gFin*100; // centesimi per grammo finito (12 % d'acqua a fine cura)
+  const euro=v=>fmt(v,2)+' €'; const out=[]; let tot=0;
+  const voce=(t,sav,lv,perche,test)=>`<div class="sv-sw"><div><b>${t}</b> ${tag(lv)}</div><div class="n" style="font-weight:700;color:var(--ok)">${sav!=null?'−'+fmt(sav,2)+' €/pane':''}</div><div class="hint keep" style="grid-column:1/-1">${perche}${test?'<br><b>Prima di adottarlo:</b> '+test:''}</div></div>`;
+  out.push(`<div class="sv-row"><span>Materie prime per grammo di sapone finito ${tag('calc')}</span><span class="n"><b>${fmt(cpg,2)} c€/g</b></span></div><div class="hint keep">È il numero giusto per confrontare ricette e modifiche: un pane più piccolo abbassa il costo a pane ma non questo.</div>`);
   // 1. dove vanno i soldi
   const top=C0.L.filter(l=>l.eur>0).sort((a,c)=>c.eur-a.eur).slice(0,3);
-  out.push(`<h4 class="mini">Dove vanno i soldi ${tag('calcolo')}</h4><div class="sv-list">${top.map(l=>`<div class="sv-row"><span>${esc(l.nome)}</span><span class="n">${fmt(l.eur/pani,2)} €/pane · ${fmt(l.eur/C0.tot*100,0)} %</span></div>`).join('')}</div>`);
-  // 2. scambi tra oli che fanno lo stesso lavoro
+  out.push(`<h4 class="mini">Dove vanno i soldi ${tag('calc')}</h4><div class="sv-list">${top.map(l=>`<div class="sv-row"><span>${esc(l.nome)}</span><span class="n">${fmt(l.eur/pani,2)} €/pane · ${fmt(l.eur/C0.tot*100,0)} %</span></div>`).join('')}</div>`);
+  // 2. attivi e profumi
+  const at=[];
+  for(const a of (R.add||[])){ const f=SV_FUNZ[a.id]; if(!f||!(+a.pct>f.min)) continue; const l=C0.L.find(x=>x.key===a.id); if(!l||!l.eur) continue; const sav=l.eur*(1-f.min/+a.pct)/pani; if(sav<SV_MIN) continue; tot+=sav;
+    const it=addById[a.id]; at.push(voce(`${esc(it?it.nome:a.id)} ${fmt(a.pct,1)} → ${f.min?fmt(f.min,1)+' %':'togliere'}`, sav, f.lv, 'Perché: '+f.perche+'.', f.min? 'confronta il colore (o la grana) al taglio con un pane del batch precedente.' : '')); }
+  const oeTot=(R.oe||[]).reduce((s,x)=>s+(+x.pct||0),0), oeMin=SV_OEMIN[R.dest]??SV_OEMIN[String(R.dest).split('_')[0]]??2.0;
+  if(oeTot>oeMin){ const eo=C0.L.filter(l=>String(l.key).startsWith('oe:')||l.key==='oe').reduce((s,l)=>s+(l.eur||0),0); const sav=eo*(1-oeMin/oeTot)/pani; if(sav>=SV_MIN){ tot+=sav;
+    at.push(voce(`Oli essenziali ${fmt(oeTot,1)} → ${fmt(oeMin,1)} % sugli oli`, sav, 'prova', 'Perché: l’intensità percepita cresce molto meno della dose (legge di Stevens): −20 % di oli essenziali si sente come −7-12 % di profumo. Gli allergeni in etichetta non cambiano.', 'test triangolare con 3 persone (due pani uguali e uno diverso: chi riconosce il diverso?) a fine cura.')); } }
+  const agr=(R.oe||[]).filter(x=>/bergam|limon|arancio|lime|pompelm|mandarin|citr/.test(x.id)).reduce((s,x)=>s+(+x.pct||0),0);
+  if(oeTot>0&&agr/oeTot>0.5) at.push(voce('Miscela di oli essenziali: più note di base, meno agrumi', null, 'parere', 'Gli agrumi (limonene, esteri) a pH 12 e in 6 settimane si perdono e si ossidano; cedro e altre note di base restano. Una miscela con almeno il 40 % di note di base profuma di più a fine cura alla stessa dose, quindi permette di scendere di dose.', 'test triangolare a fine cura.'));
+  if(R.oli.some(o=>/^cera_d_api/.test(o.id))){ const l=C0.L.find(x=>/^cera_d_api/.test(x.key)); const sav=l&&l.eur? l.eur/pani : 0;
+    at.push(voce('Cera d’api: serve davvero?', sav>=0.01?sav:null, 'prova', 'Come fissativo del profumo non ha né fonte (Dunn, Spitz) né meccanismo: a 25 °C è cristallina e non trattiene gli oli essenziali. Il suo costo vero è il processo: versare a 62 °C e gel obbligato, che fanno evaporare profumo.', 'batch A/B: cera 2 % contro cacao +2 % (o lattato 2 %), test triangolare sul profumo e durezza al taglio.')); }
+  out.push(`<h4 class="mini">Attivi e profumi</h4>`+(at.length? at.join('') : '<div class="hint">Nessun attivo o profumo sopra la dose che serve.</div>'));
+  // 3. scarti e resa
+  const sc=[]; const Lm=+$('#m-l').value||0, sp=+$('#m-sp').value||0;
+  if(Lm&&sp){ const n=Math.floor(Lm/sp+1e-9), tall=Lm-n*sp; if(n>0&&tall>=0.3){ const pct=tall/Lm*100; sc.push(voce(`Taglia ${n} pani da ${fmt(Lm/n,2)} cm invece di ${fmt(sp,1)} cm`, null, 'calc', `Oggi resta un tallone di ${fmt(tall,1)} cm: il ${fmt(pct,1)} % della pasta (${euro(C0.tot*pct/100)} di materie a batch) finisce negli scarti invece che nei pani.`, '')); } }
+  sc.push(voce('Non piallare le facce', null, 'calc', 'Un millimetro piallato sulle due facce grandi di ogni pane è il 6-7 % del sapone. La cenere si evita già con alcol subito dopo il versamento e gel completo (l_0049): se compare, si lava via, non si pialla.', ''));
+  if((R.add||[]).some(a=>a.id==='calendula')) sc.push(voce('Recupera l’estratto dal barattolo', null, 'calc', 'Gli estratti CO2 pastosi lasciano il 5-10 % della dose sulle pareti: pesa per differenza e sciogli il residuo con l’olio caldo prelevato dagli oli della ricetta.', ''));
+  out.push(`<h4 class="mini">Scarti e resa</h4>`+sc.join(''));
+  // 4. acquisti: confezioni grandi solo dove l'olio regge
   let S=null; try{ S=magState(); }catch(e){}
-  const inMag=id=>{ if(R.oli.some(o=>o.id===id)) return true; const P=S&&(S.P[ckey(id)]||S.P[id]); return !!(P&&P.disp>50); };
-  const semN=k=>{ const s=semaforo(k); return {bad:s.filter(x=>x.cls==='bad').length, warn:s.filter(x=>x.cls==='warn').length}; };
+  const now=Date.now(), uso={}; for(const bt of (typeof BATCHES!=='undefined'?BATCHES:[])){ const d=Date.parse(bt.dataColata||''); if(!(d>now-120*864e5)) continue; const f=bt.rForm; if(!f) continue; for(const o of f.oli||[]) uso[o.id]=(uso[o.id]||0)+(+f.tot||0)*(+o.pct||0)/100; }
+  const rows=R.oli.map(o=>{ const sh=SV_SHELF[o.id]; if(!sh) return ''; const gB=K.gSum*(+o.pct)/100; const gMese=Math.max(gB,(uso[o.id]||0)/4); const kgMax=gMese*sh/1000;
+    return `<div class="sv-row"><span>${esc((byId[o.id]||{}).nome||o.id)} <span class="hint">aperto dura ~${sh} mesi</span></span><span class="n">confezione max ≈ ${kgMax>=1?fmt(kgMax,kgMax<10?1:0)+' kg':fmt(kgMax*1000,0)+' g'}</span></div>`; }).filter(Boolean);
+  out.push(`<h4 class="mini">Acquisti: confezioni grandi solo se l’olio regge ${tag('calc')}</h4><div class="sv-list">${rows.join('')}</div><div class="hint keep">Confezione massima = quanto ne usi al mese (dai batch degli ultimi 4 mesi, almeno un batch di questa ricetta) × quanti mesi dura aperto. Oltre, lo sconto lo perdi in olio rancido. Macadamia: travasa in bottiglie piene, al fresco. Palma e sansa: sempre confezioni piccole.</div>`);
+  // 5. scambi tra oli: solo i due difendibili
+  const sw=[]; const semN=k=>{ const s=semaforo(k); return {bad:s.filter(x=>x.cls==='bad').length, warn:s.filter(x=>x.cls==='warn').length}; };
   const s0=semN(K); let m0=null; try{ m0=lavModel(K,R); }catch(e){}
-  const sw=[];
-  for(const o of R.oli){ const grp=Object.values(SAVE_GRP).find(g=>g.includes(o.id)); if(!grp) continue; const po=prezzoDi(o.id); if(!po) continue;
-    for(const cid of grp){ if(cid===o.id) continue; const pc=prezzoDi(cid); if(!pc||pc.p>=po.p) continue; if(!inMag(cid)) continue;
-      const d=Math.min(5,+o.pct); if(d<1) continue; const r2={...R, oli:R.oli.map(x=>({...x}))}; r2.oli.find(x=>x.id===o.id).pct=+o.pct-d; const ex=r2.oli.find(x=>x.id===cid); if(ex) ex.pct=+ex.pct+d; else r2.oli.push({id:cid,pct:d}); r2.oli=r2.oli.filter(x=>+x.pct>0);
-      const K2=calc(r2); if(!K2.profOK) continue; const s2=semN(K2); if(s2.bad>s0.bad||s2.warn>s0.warn) continue; let m2=null; try{ m2=lavModel(K2,r2); }catch(e){} if(m0&&m2&&m2.cls>m0.cls) continue;
-      const C2=costo(K2,r2,pani,0); const sav=(C0.tot-C2.tot)/pani; if(sav<0.01) continue;
-      const nm=id=>(byId[id]||{}).nome||id; const nt=SAVE_NOTE[o.id+'>'+cid]||''; const u0=UNSAP[o.id], u1=UNSAP[cid];
-      sw.push({sav, html:`<div class="sv-sw"><div><b>${esc(nm(o.id))} ${fmt(o.pct,0)} → ${fmt(+o.pct-d,0)} %</b>, ${esc(nm(cid))} ${fmt(ex?+ex.pct-d:0,0)} → ${fmt(ex?+ex.pct:d,0)} %</div><div class="n" style="font-weight:700;color:var(--ok)">−${fmt(sav,2)} €/pane</div><div class="hint keep" style="grid-column:1/-1">Semaforo e velocità invariati.${nt?' Attenzione: '+esc(nt)+'.':''}${u0&&u1?` Insaponificabili: ${fmt(u0[0],1)}-${fmt(u0[1],1)} % → ${fmt(u1[0],1)}-${fmt(u1[1],1)} % dell’olio.`:''}</div></div>`}); } }
-  sw.sort((a,c)=>c.sav-a.sav);
-  out.push(`<h4 class="mini">Scambi tra oli che fanno lo stesso lavoro ${tag('prova')}</h4>`+(sw.length? sw.slice(0,3).map(x=>x.html).join('') : '<div class="hint">Nessuno scambio che risparmi senza cambiare semaforo o velocità, con gli oli che hai in magazzino.</div>'));
-  // 3. dosi sopra il minimo
-  const dz=[]; for(const a of (R.add||[])){ const it=addById[a.id]; if(!it||it.min==null||!(+a.pct>it.min)) continue; if(it.cat==='Funzionale'||['roe','citrico','gluconato','lattato','sale','oe'].includes(a.id)) continue; const l=C0.L.find(x=>x.key===a.id); if(!l||!l.eur) continue; const sav=l.eur*(1-it.min/+a.pct)/pani; if(sav<0.01) continue; dz.push(`<div class="sv-row"><span>${esc(it.nome)} ${fmt(a.pct,1)} → ${fmt(it.min,1)} %</span><span class="n" style="color:var(--ok);font-weight:700">−${fmt(sav,2)} €/pane</span></div>`); }
-  const oeTot=(R.oe||[]).reduce((s,x)=>s+(+x.pct||0),0); if(oeTot>2){ const eo=C0.L.filter(l=>String(l.key).startsWith('oe:')).reduce((s,l)=>s+(l.eur||0),0); const sav=eo*(1-2/oeTot)/pani; if(sav>=0.01) dz.push(`<div class="sv-row"><span>Oli essenziali ${fmt(oeTot,1)} → 2,0 % sugli oli</span><span class="n" style="color:var(--ok);font-weight:700">−${fmt(sav,2)} €/pane</span></div><div class="hint keep">Il profumo dopo la cura si sente un po’ meno; sotto il 2 % molti oli essenziali svaniscono.</div>`); }
-  out.push(`<h4 class="mini">Dosi sopra il minimo ${tag('parere')}</h4>`+(dz.length? `<div class="sv-list">${dz.join('')}</div><div class="hint">Minimo = dose più bassa indicata nel catalogo additivi. Per gli estratti nel sapone a risciacquo non esiste una dose "efficace" dimostrata: è una scelta.</div>` : '<div class="hint">Nessuna dose sopra il minimo del catalogo.</div>'));
-  // 4. costi per batch
-  const perB=USO.filter(u=>u.per==='batch'&&IMB[u.slug]).reduce((s,u)=>s+IMB[u.slug].eurPz*(+u.q||0),0) + C0.attBatch;
-  if(perB>0) out.push(`<h4 class="mini">Costi per batch ${tag('calcolo')}</h4><div class="sv-row"><span>Consumabili e attrezzatura: ${fmt(perB,2)} € a batch</span><span class="n">${pani} → ${pani+1} pani: ${fmt(perB/pani,2)} → ${fmt(perB/(pani+1),2)} €/pane</span></div><div class="hint">Solo se lo stampo lo permette: controlla "Stampo: calcola la ricetta dalle misure".</div>`);
-  el.innerHTML=out.join('') + '<div class="hint keep" style="margin-top:8px">Sono suggerimenti: la ricetta non cambia finché non la modifichi tu.</div>';
-  const best=(sw[0]?sw[0].sav:0); $('#save-cnt').textContent= best? '· fino a −'+fmt(best,2)+' €/pane con uno scambio' : ''; }
+  const prova=(r2,titolo,perche)=>{ const K2=calc(r2); if(!K2.profOK) return; const s2=semN(K2); if(s2.bad>s0.bad||s2.warn>s0.warn) return; if(K2.grp.PUFA>8||K2.grp.PUFA-K.grp.PUFA>1) return; let m2=null; try{ m2=lavModel(K2,r2); }catch(e){} if(m0&&m2&&m2.cls>m0.cls) return;
+    const sav=(C0.tot-costo(K2,r2,pani,0).tot)/pani; if(sav<SV_MIN) return; tot+=sav; sw.push(voce(titolo, sav, 'prova', perche, 'batch di prova accanto alla ricetta attuale; Prove sui pani a fine cura: schiuma a 20 °C, consumo, mush.')); };
+  const dest=String(R.dest);
+  const bab=R.oli.find(o=>o.id==='babassu'), coc=byId.cocco_copra, bb=byId.babassu;
+  if(bab&&!dest.startsWith('viso')&&coc&&bb&&prezzoDi('cocco_copra')&&prezzoDi('babassu')&&prezzoDi('cocco_copra').p<prezzoDi('babassu').p){ const lm=c=>(+c.fa.C12||0)+(+c.fa.C14||0); const pc=Math.round(+bab.pct*lm(bb)/lm(coc)*10)/10; const d=+bab.pct-pc;
+    const r2={...R, oli:R.oli.filter(o=>o.id!=='babassu').map(o=>({...o}))}; const ex=r2.oli.find(o=>o.id==='cocco_copra'); if(ex) ex.pct=+ex.pct+pc; else r2.oli.push({id:'cocco_copra',pct:pc});
+    const pu=o=>{ const f=(byId[o.id]||{}).fa||{}; return (+f.C18_2||0)+(+f.C18_3||0); }; const big=[...r2.oli].filter(o=>o.id!=='cocco_copra'&&o.id!=='ricino'&&!/^cera/.test(o.id)).sort((a,c)=>pu(a)-pu(c))[0]; // la differenza va al grasso più stabile if(big) big.pct=+big.pct+d;
+    prova(r2, `Babassu ${fmt(bab.pct,0)} % → cocco ${fmt(pc,1)} %${big&&d>0.05?' (+'+fmt(d,1)+' % '+esc((byId[big.id]||{}).nome||big.id)+')':''}`, 'Perché: cocco e babassu danno gli stessi laurici; a parità di laurico+miristico il sapone è in pratica lo stesso (unico scambio neutro anche per l’irrancidimento). Non sul viso.'); }
+  const cac=R.oli.find(o=>o.id==='cacao'), pal=R.oli.find(o=>o.id==='palma');
+  if(cac&&+cac.pct>=10&&dest.startsWith('corpo')&&prezzoDi('palma')&&prezzoDi('cacao')&&prezzoDi('palma').p<prezzoDi('cacao').p){ const d=Math.min(+cac.pct,10);
+    const r2={...R, oli:R.oli.map(o=>({...o}))}; r2.oli.find(o=>o.id==='cacao').pct=+cac.pct-d; const ex=r2.oli.find(o=>o.id==='palma'); if(ex) ex.pct=+ex.pct+d; else r2.oli.push({id:'palma',pct:d}); r2.oli=r2.oli.filter(o=>+o.pct>0);
+    prova(r2, `Cacao ${fmt(cac.pct,0)} → ${fmt(+cac.pct-d,0)} %, palma ${fmt(pal?pal.pct:0,0)} → ${fmt((pal?+pal.pct:0)+d,0)} %`, 'Perché: entrambi danno durezza, ma il cacao è fatto di stearato e il palma di palmitato: a parità di saturi il palma dà un pane un po’ meno duro e un filo più polinsaturi (coperti da ROE e chelanti).'); }
+  out.push(`<h4 class="mini">Scambi tra oli</h4>`+(sw.length? sw.join('') : '<div class="hint keep">Nessuno scambio difendibile per questa ricetta. Gli scambi tra oli valgono in genere pochi centesimi: il risparmio vero è negli attivi e nei profumi.</div>'));
+  out.push(`<div class="hint keep" style="margin-top:10px"><b>Cosa non trovi qui, e perché:</b> superfat più basso (l’olio libero resta nel pane e si vende a peso: nessun risparmio), lisciva più concentrata (l’acqua costa zero), un pane in più (il costo al grammo non cambia), sale al posto del lattato (1 centesimo a pane), meno ROE o chelanti (2 centesimi a pane per proteggere tutto il batch). Sotto ${fmt(SV_MIN,2)} €/pane i suggerimenti non compaiono: è meno dell’incertezza dei prezzi.</div><div class="hint keep">Sono suggerimenti: la ricetta non cambia finché non la modifichi tu.</div>`);
+  el.innerHTML=out.join(''); $('#save-cnt').textContent= tot>=SV_MIN? '· fino a −'+fmt(tot,2)+' €/pane' : ''; }
 
 // ---------- confronto ----------
 function fillCmp(){ const s=$('#cmp-pick'); const cur=s.value; s.innerHTML='<option value="">— scegli —</option>';
