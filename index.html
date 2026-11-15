@@ -32,21 +32,20 @@ h1{font-size:1.45rem;font-weight:700;margin:0;letter-spacing:-.01em}
 h2{font-size:1rem;margin:0 0 8px;font-weight:700}
 h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 6px;font-weight:600}
 .num,.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
-.layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;margin-top:14px}
-@media (max-width:860px){.layout{grid-template-columns:1fr}
-.layout{display:block} .layout>.panel+.panel{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;border-top:0} .layout>#builder{border-bottom-left-radius:0;border-bottom-right-radius:0;padding-bottom:4px}
+.layout{display:block;max-width:900px;margin:14px auto 0}
+.layout>.panel+.panel{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;border-top:0} .layout>#builder{border-bottom-left-radius:0;border-bottom-right-radius:0;padding-bottom:4px}
 #layout[data-rt=formula] [data-rt]:not([data-rt=formula]),#layout[data-rt=analisi] [data-rt]:not([data-rt=analisi]),#layout[data-rt=lav] [data-rt]:not([data-rt=lav]),#layout[data-rt=costi] [data-rt]:not([data-rt=costi]){display:none!important}
 #layout:not([data-rt=formula]) #verdict>h2{display:none}
 .tipb{display:inline-block;background:none;border:0;padding:2px 4px;margin:4px 0 0;font-size:1.05rem;line-height:1;color:var(--bad);cursor:pointer;font-family:inherit} div.hint.tip-h{display:none} div.hint.tip-h.tip-o{display:block}
 @media print{.tipb{display:none} div.hint.tip-h{display:block}}
 .rt-bar{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap} .rt-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .rt-head{font-size:.82rem;color:var(--muted);margin:8px 0 2px} .rt-head b{color:var(--fg);font-size:1.05rem;display:block}
-.rt-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:8px -4px 10px;position:sticky;top:0;background:var(--surface);z-index:5}
+.rt-tabs{display:flex;gap:10px;border-bottom:1px solid var(--line);margin:8px -4px 10px;position:sticky;top:0;background:var(--surface);z-index:5}
 .rt-tabs button{flex:1;background:none;border:0;border-bottom:3px solid transparent;border-radius:0;padding:10px 2px;font-weight:600;color:var(--muted);font-size:.9rem;cursor:pointer}
 .rt-tabs button.on{color:var(--fg);border-bottom-color:var(--accent)}
 #semaforo .it .m{display:none} #semaforo .it.why .m{display:block} #semaforo .it.hid{display:none}
 #semaforo .wy{font-family:inherit;font-size:1.05rem;line-height:1;color:var(--bad)!important;color:var(--accent);font-weight:600;background:none;border:0;padding:0 0 0 8px;cursor:pointer;white-space:nowrap}
-#semaforo .it .val{display:flex;align-items:center}}
+#semaforo .it .val{display:flex;align-items:center}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
 button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:7px 12px}
 button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
@@ -179,7 +178,7 @@ h4.mini{margin:12px 0 2px;font-size:.74rem;text-transform:uppercase;letter-spaci
 .quick{display:none;gap:4px 14px;flex-wrap:wrap;align-items:baseline;background:var(--surface2);border-radius:8px;padding:8px 10px;margin:6px 0 2px;font-size:.84rem}
 .quick b{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1rem}
 .quick .dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;margin-right:3px}
-@media (max-width:860px){ .quick{display:flex} }
+.quick{display:flex}
 .rlist{display:grid;gap:6px;margin-top:6px}
 .ritem{display:flex;align-items:stretch;gap:6px}
 .rmain{flex:1;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:8px;text-align:left;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);cursor:pointer}
