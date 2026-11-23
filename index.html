@@ -63,6 +63,7 @@ table{border-collapse:collapse;width:100%;font-size:.86rem}
 th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
 td.n,th.n{text-align:right}
+#oilfa-table th{letter-spacing:0;font-size:.66rem;padding:5px 4px} #oilfa-table td{padding:5px 4px} #oilfa-table th:first-child,#oilfa-table td:first-child{position:sticky;left:0;background:var(--surface);z-index:1}
 td input[type=number]{width:74px;padding:4px 6px}
 td select{padding:4px 6px}
 .tot{font-weight:600}
@@ -498,6 +499,10 @@ optgroup{font-weight:700;font-style:normal}
   <details class="sec sub"><summary>Catene degli acidi grassi</summary><div id="chains" style="margin-top:8px"></div></details>
   <details class="sec sub"><summary>Dettaglio per acido</summary>
   <div class="twrap" style="margin-top:8px"><table id="fa-table"><thead><tr><th>Acido</th><th class="n">%</th><th>Principale fonte</th></tr></thead><tbody></tbody></table></div>
+  </details>
+  <details class="sec sub"><summary>Acidi grassi di ciascun olio</summary>
+  <div class="twrap" style="margin-top:8px"><table id="oilfa-table"></table></div>
+  <div class="hint keep" style="margin-top:6px">Valori in % sull'olio; l'ultima riga è la % sulla ricetta. Per sapere quanto un olio porta alla ricetta: % sull'olio × quota dell'olio (karité 42 % di stearico × 0,20 = 8,4 punti).</div>
   </details></details>
 
 
@@ -1069,6 +1074,17 @@ function renderChains(K){ const el=$('#chains'); if(!el) return; if(!K.profOK){ 
     rows.forEach(k=>{ const [n,db]=CHAIN[k]; h+=`<div class="ch-r"><div class="ch-n">${esc(name[k].replace(/ C\d+(:\d)?$/,''))}<span>${n} C${db.length?` · ${db.length} ${db.length>1?'doppi legami':'doppio legame'}`:''}</span></div><div class="ch-s">${chainSvg(k,col)}</div><div class="ch-p">${fmt(K.prof[k])} %</div></div>`; });
     h+='</div>'; });
   el.innerHTML=h+'<div class="hint" style="margin-top:6px">Ogni angolo della linea è un atomo di carbonio; il carbonio 1 è quello del gruppo COOH, a destra. Le linee doppie sono i doppi legami (cis negli oli naturali): piegano la catena, le molecole si impacchettano peggio e il grasso fonde a temperatura più bassa. Il disegno è semplificato e non mostra la piega. Il ricinoleico ha in più un gruppo OH sul carbonio 12. Le cere (cera d\'api, candelilla…) sono soprattutto esteri, non acidi grassi: qui compare solo la loro piccola parte saponificabile.</div>'; }
+// acidi grassi di ciascun olio della ricetta (% sull'olio) + riga della ricetta (% sugli oli)
+function renderOilFA(K){ const t=$('#oilfa-table'); if(!t) return; const oils=K.oils.filter(o=>o.g>0);
+  if(!oils.length){ t.innerHTML='<tbody><tr><td class="hint">Nessun olio nella ricetta.</td></tr></tbody>'; return; }
+  const cols=FA.filter(([k])=>oils.some(o=>o.c.fa&&(+o.c.fa[k]||0)>=0.5)||(K.profOK&&K.prof[k]>=0.05));
+  const v=x=>x>=1? fmt(x,0) : x>0? fmt(x,1) : '—';
+  const AB={C8:'Capril.',C10:'Capric.',C20:'Arachid.',C16_1:'Palmitol.',C20_1:'Gondoico',C22_1:'Erucico',RIC:'Ricinol.',C18_3:'Linolen.'};
+  const shk=(k,n)=>AB[k]||n.replace(/ C\d+(:\d)?$/,'');
+  let h='<thead><tr><th>Olio</th><th class="n">% ric.</th>'+cols.map(([k,n])=>`<th class="n" title="${esc(n)}">${esc(shk(k,n))}</th>`).join('')+'</tr></thead><tbody>';
+  h+=oils.map(o=>`<tr><td>${esc(o.c.nome)}</td><td class="n">${fmt(+o.pct,0)}</td>`+(o.c.fa? cols.map(([k])=>`<td class="n">${v(+o.c.fa[k]||0)}</td>`).join('') : `<td colspan="${cols.length}" class="hint">profilo degli acidi grassi mancante</td>`)+'</tr>').join('');
+  h+=`<tr style="font-weight:700"><td>Ricetta</td><td class="n">100</td>`+cols.map(([k])=>`<td class="n">${K.profOK? fmt(K.prof[k],1) : '—'}</td>`).join('')+'</tr></tbody>';
+  t.innerHTML=h; }
 function renderOut(K){
   K=K||calc(); try{ renderLav(K); }catch(e){ console.error(e); } try{ renderChains(K); }catch(e){ console.error(e); }
   $('#pct-tot').textContent=fmt(K.pctSum); $('#pct-tot').className='n tot'+(Math.abs(K.pctSum-100)>0.05?' bad':''); $('#g-tot').textContent=fmt(K.gSum,0);
@@ -1090,6 +1106,7 @@ function renderOut(K){
       ? `<b>Spazio teorico</b> (insaturi solubili liberi ${rng(E)}), ma sul viso resta nella fascia laurico+miristico della destinazione: per più schiuma usa ricino o lattato, non i laurici.`
       : `<b>C'è spazio</b>: insaturi solubili liberi ${rng(E)}. Più babassu o cocco = più schiuma pronta anche in acqua fredda, ma più consumo e più sgrassante.`)
       + ` <span style="opacity:.8">Stima (±30 g) per confrontare ricette; non entra nel semaforo.</span>` : ''; }
+  renderOilFA(K);
   const ft=$('#fa-table tbody'); ft.innerHTML=''; if(K.profOK) FA.forEach(([k,n])=>{ const v=K.prof[k]; if(v<0.05) return; const tr=document.createElement('tr'); tr.innerHTML=`<td>${n}</td><td class="n">${fmt(v)}</td><td>${esc(mainSource(k,K.src))}</td>`; ft.appendChild(tr); });
   // semaforo
   const sm=$('#semaforo'); sm.innerHTML=''; if(!K.gSum){ sm.innerHTML='<div class="hint">Scegli una ricetta di riferimento o aggiungi oli.</div>'; }
