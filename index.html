@@ -63,7 +63,7 @@ table{border-collapse:collapse;width:100%;font-size:.86rem}
 th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
 td.n,th.n{text-align:right}
-.kv .selbox{cursor:pointer;border:2px solid transparent;transition:border-color .15s} .kv .selbox:hover{border-color:var(--line)} .kv .selbox.on{border-color:var(--accent)} .kv .selbox.on .l{color:var(--accent);font-weight:600} #oilfa-table .hl{background:color-mix(in srgb,var(--accent) 14%,var(--surface))} #oilfa-table th.hl{color:var(--accent)} #oilfa-table tr.ric td.hl{background:color-mix(in srgb,var(--accent) 24%,var(--surface))}
+.kv .kv-lab{grid-column:1/-1;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:4px 0 -4px} .kv .l .sub{font-size:.68rem;opacity:.85} .kv .selbox{cursor:pointer;border:2px solid transparent;border-left:4px solid var(--sc,var(--line));transition:border-color .15s} .kv .selbox:hover{border-color:var(--sc,var(--line))} .kv .selbox.on{border-color:var(--sc,var(--accent))} .kv .selbox.on .l{color:var(--fg);font-weight:600} #oilfa-table th{box-shadow:inset 0 -3px 0 var(--fc,transparent)} #oilfa-table .hl{background:color-mix(in srgb,var(--sc,var(--accent)) 16%,var(--surface))} #oilfa-table th.hl{color:var(--fg)} #oilfa-table tr.ric td.hl{background:color-mix(in srgb,var(--sc,var(--accent)) 28%,var(--surface))}
 #oilfa-table th{letter-spacing:0;font-size:.66rem;padding:5px 4px} #oilfa-table td{padding:5px 4px} #oilfa-table input[type=number]{width:60px;padding:3px 4px} #oilfa-table .bad{color:var(--bad,#b3261e)} #oilfa-table th:first-child,#oilfa-table td:first-child{position:sticky;left:0;background:var(--surface);z-index:1}
 td input[type=number]{width:74px;padding:4px 6px}
 td select{padding:4px 6px}
@@ -1078,7 +1078,9 @@ function renderChains(K){ const el=$('#chains'); if(!el) return; if(!K.profOK){ 
   el.innerHTML=h+'<div class="hint" style="margin-top:6px">Ogni angolo della linea è un atomo di carbonio; il carbonio 1 è quello del gruppo COOH, a destra. Le linee doppie sono i doppi legami (cis negli oli naturali): piegano la catena, le molecole si impacchettano peggio e il grasso fonde a temperatura più bassa. Il disegno è semplificato e non mostra la piega. Il ricinoleico ha in più un gruppo OH sul carbonio 12. Le cere (cera d\'api, candelilla…) sono soprattutto esteri, non acidi grassi: qui compare solo la loro piccola parte saponificabile.</div>'; }
 // acidi grassi di ciascun olio della ricetta (% sull'olio) + riga della ricetta (% sugli oli); quote degli oli modificabili anche qui
 let FA_SEL=null; // riquadro del profilo selezionato: evidenzia le sue colonne nella tabella per olio
-const FA_SELS={SAT:k=>GRP[k]==='SAT', INS:k=>GRP[k]!=='SAT', MUFA:k=>GRP[k]==='MUFA', RIC:k=>k==='RIC', PUFA:k=>GRP[k]==='PUFA', LM:k=>k==='C12'||k==='C14'};
+const FA_COL=k=>['C8','C10','C12','C14'].includes(k)?'var(--c-fast)':['C16','C18','C20'].includes(k)?'var(--c-hard)':'var(--c-slow)';
+const SEL_COL={SAT:'var(--c-hard)',MUFA:'var(--c-slow)',PUFA:'var(--c-slow)',LM:'var(--c-fast)',EUT:'var(--c-fast)'};
+const FA_SELS={SAT:k=>GRP[k]==='SAT', MUFA:k=>GRP[k]==='MUFA'||k==='RIC', PUFA:k=>GRP[k]==='PUFA', LM:k=>k==='C12'||k==='C14', EUT:k=>['C12','C14','C18_1','C16_1'].includes(k)};
 let OILFA_MODE='ric'; try{ OILFA_MODE=localStorage.getItem('mrp-oilfa')||'ric'; }catch(e){}
 function renderOilFA(K){ const t=$('#oilfa-table'); if(!t) return; const oils=K.oils;
   document.querySelectorAll('#oilfa-mode [data-m]').forEach(b=>b.classList.toggle('primary',b.dataset.m===OILFA_MODE));
@@ -1092,6 +1094,7 @@ function renderOilFA(K){ const t=$('#oilfa-table'); if(!t) return; const oils=K.
   const tot=()=>`<span class="${Math.abs(K.pctSum-100)>0.05?'bad':''}" title="Somma delle quote: deve fare 100">${fmt(K.pctSum,1)}</span>`;
   const rec=([k])=>K.profOK? fmt(K.prof[k],1) : '—';
   const hl=k=>FA_SEL&&FA_SELS[FA_SEL]&&FA_SELS[FA_SEL](k)?' hl':'';
+  t.style.setProperty('--sc', FA_SEL? SEL_COL[FA_SEL] : 'var(--accent)');
   const sig=OILFA_MODE+'#'+(FA_SEL||'')+'#'+oils.map(o=>o.c.id).join('|')+'#'+cols.map(c=>c[0]).join(',');
   if(t.dataset.sig===sig){ // stessa struttura: aggiorna i numeri senza ricostruire (non perde il cursore mentre scrivi)
     t.querySelectorAll('input[data-oi]').forEach(inp=>{ const i=+inp.dataset.oi, o=oils[i]; if(document.activeElement!==inp) inp.value=o.pct;
@@ -1099,7 +1102,7 @@ function renderOilFA(K){ const t=$('#oilfa-table'); if(!t) return; const oils=K.
     const last=t.querySelector('tr.ric'); if(last){ last.children[1].innerHTML=tot(); cols.forEach((c,j)=>{ last.children[j+2].textContent=rec(c); }); }
     return; }
   t.dataset.sig=sig;
-  let h='<thead><tr><th>Olio</th><th class="n">% ric.</th>'+cols.map(([k,n])=>`<th class="n${hl(k)}" title="${esc(n)}">${esc(shk(k,n))}</th>`).join('')+'</tr></thead><tbody>';
+  let h='<thead><tr><th>Olio</th><th class="n">% ric.</th>'+cols.map(([k,n])=>`<th class="n${hl(k)}" title="${esc(n)}" style="--fc:${FA_COL(k)}">${esc(shk(k,n))}</th>`).join('')+'</tr></thead><tbody>';
   h+=oils.map((o,i)=>`<tr><td><button type="button" class="sm ghost" data-odel="${i}" title="Togli ${esc(o.c.nome)} dalla ricetta" aria-label="Togli ${esc(o.c.nome)}" style="padding:0 6px;margin-right:4px">✕</button>${esc(o.c.nome)}</td><td class="n"><input type="number" step="0.5" min="0" max="100" value="${o.pct}" data-oi="${i}" aria-label="% di ${esc(o.c.nome)}"></td>`+(o.c.fa? cols.map(([k])=>`<td class="n${hl(k)}">${cell(o,k)}</td>`).join('') : `<td colspan="${cols.length}" class="hint">profilo degli acidi grassi mancante</td>`)+'</tr>').join('');
   h+=`<tr class="ric" style="font-weight:700"><td>Ricetta</td><td class="n">${tot()}</td>`+cols.map(c=>`<td class="n${hl(c[0])}">${rec(c)}</td>`).join('')+'</tr></tbody>';
   t.innerHTML=h;
@@ -1117,8 +1120,11 @@ function renderOut(K){
   $('#o-detail').textContent=K.gSum? `${fmt(K.naohTeo,2)} × ${(1-R.sf/100).toFixed(2)} = ${fmt(K.naohSc,2)} g` + (K.comp?` + ${fmt(K.comp,2)} g per l'acido citrico`:'') + (R.pur<100?` ÷ ${R.pur} % di purezza`:'') + ` → ${fmt(K.naoh,1)} g. Acqua = NaOH × ${100-R.conc}/${R.conc} (lisciva al ${R.conc} %). Resa a fine cura ≈ ${fmt(K.batch*0.895,0)} g.` : 'Aggiungi gli oli.';
   // profile
   const p=$('#profile'); const g=K.grp;
-  p.innerHTML=[['Saturi',g.SAT,'SAT'],['Insaturi (mono + ricino + poli)',g.MUFA+g.RIC+g.PUFA,'INS'],['Monoinsaturi',g.MUFA,'MUFA'],['Ricinoleico',g.RIC,'RIC'],['Polinsaturi',g.PUFA,'PUFA'],['Laurico+miristico',K.ind.LM,'LM']].map(([l,v,sel])=>`<div class="box selbox${FA_SEL===sel?' on':''}" data-sel="${sel}" role="button" tabindex="0" title="Tocca per evidenziare questi acidi nella tabella in basso"><div class="v">${K.profOK?fmt(v):'—'} %</div><div class="l">${l}</div></div>`).join('')
-    + `<div class="box"><div class="v">${K.profOK&&K.eut?fmt(K.eut.pct,0)+' %':'—'}${K.profOK&&K.eut?' <span style="font-size:.72rem;font-weight:400">~'+fmt(Math.round(K.eut.g/10)*10,0)+' g</span>':''}</div><div class="l">Eutettico (schiuma a freddo)</div></div>`;
+  const box=(l,v,sel,sub)=>`<div class="box selbox${FA_SEL===sel?' on':''}" data-sel="${sel}" style="--sc:${SEL_COL[sel]}" role="button" tabindex="0" title="Tocca per evidenziare questi acidi nella tabella in basso"><div class="v">${K.profOK?fmt(v):'—'} %</div><div class="l">${l}${sub?`<br><span class="sub">${sub}</span>`:''}</div></div>`;
+  p.innerHTML = box('Saturi',g.SAT,'SAT') + box('Monoinsaturi',g.MUFA+g.RIC,'MUFA',K.profOK?`di cui ricinoleico ${fmt(g.RIC)} %`:'') + box('Polinsaturi',g.PUFA,'PUFA')
+    + `<div class="kv-lab">Schiuma a freddo</div>`
+    + box('Laurico + miristico',K.ind.LM,'LM')
+    + `<div class="box selbox${FA_SEL==='EUT'?' on':''}" data-sel="EUT" style="--sc:${SEL_COL.EUT}" role="button" tabindex="0" title="Tocca per evidenziare laurati e insaturi solubili nella tabella in basso"><div class="v">${K.profOK&&K.eut?fmt(K.eut.pct,0)+' %':'—'}${K.profOK&&K.eut?' <span style="font-size:.72rem;font-weight:400">~'+fmt(Math.round(K.eut.g/10)*10,0)+' g</span>':''}</div><div class="l">Eutettico (laurati + insaturi solubili)</div></div>`;
   p.querySelectorAll('.selbox').forEach(b=>{ const go=()=>{ FA_SEL = FA_SEL===b.dataset.sel? null : b.dataset.sel; p.querySelectorAll('.selbox').forEach(x=>x.classList.toggle('on',x.dataset.sel===FA_SEL)); const t=$('#oilfa-table'); if(t){ renderOilFA(K); if(FA_SEL){ const d=t.closest('details'); if(d&&!d.open) d.open=true; } } }; b.onclick=go; b.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } }; });
   const en=$('#eut-note'); if(en){ const E=K.eut; const viso=R.dest.startsWith('viso'); const rng=v=>`${fmt(Math.round(v.freeMin/10)*10,0)}-${fmt(Math.round(v.freeMax/10)*10,0)} g`;
     en.innerHTML = (K.profOK&&E&&E.g>0)? (E.tetto
@@ -1148,7 +1154,7 @@ function riepilogo(){ const K=calc(); const rule=RULES[R.dest];
   s+=K.oils.map(o=>`  ${o.c.nome}: ${fmt(o.g,0)} g (${o.pct} %)`).join('\n')+'\n';
   s+=`NaOH ${fmt(K.naoh)} g · acqua ${fmt(K.acqua)} g · batch ~${fmt(K.batch,0)} g\n`;
   if(K.adds.length) s+='Additivi:\n'+K.adds.map(a=>`  ${a.d.nome}: ${fmt(a.g,1)} g (${a.pct} %) — ${a.d.dove}`).join('\n')+'\n';
-  if(K.profOK) s+=`SAT ${fmt(K.grp.SAT)} · insaturi totali ${fmt(K.grp.MUFA+K.grp.RIC+K.grp.PUFA)} · MUFA ${fmt(K.grp.MUFA)} · PUFA ${fmt(K.grp.PUFA)} · ricinoleico ${fmt(K.grp.RIC)} · laurico+miristico ${fmt(K.ind.LM)} · attivi a freddo ${fmt(K.ind.AF)}\n`;
+  if(K.profOK) s+=`Saturi ${fmt(K.grp.SAT)} · monoinsaturi ${fmt(K.grp.MUFA+K.grp.RIC)} (di cui ricinoleico ${fmt(K.grp.RIC)}) · polinsaturi ${fmt(K.grp.PUFA)} · laurico+miristico ${fmt(K.ind.LM)} · attivi a freddo ${fmt(K.ind.AF)}\n`;
   if(K.profOK){ s+='Acidi grassi della ricetta (% sugli oli · da dove vengono):\n'+FA.filter(([k])=>K.prof[k]>=0.05).map(([k,n])=>{ const so=(K.src[k]||[]).slice().sort((x,y)=>y[1]-x[1]).filter(x=>x[1]>0).slice(0,3).map(x=>`${x[0]} ${fmt(x[1]*10000/(K.prof[k]*K.gSum),0)} %`); return `  ${n}: ${fmt(K.prof[k])} %${so.length?' · '+so.join(', '):''}`; }).join('\n')+'\n';
     s+='Profilo di ciascun olio (% dei suoi acidi grassi, voci ≥ 1 %):\n'+K.oils.filter(o=>o.c.fa).map(o=>`  ${o.c.nome}: `+FA.filter(([k])=>(+o.c.fa[k]||0)>=1).map(([k,n])=>`${n.replace(/ C\d+(:\d)?$/,'')} ${fmt(+o.c.fa[k],0)}`).join(', ')).join('\n')+'\n'; }
   else if(K.noProf&&K.noProf.length) s+='Profilo acidi grassi incompleto: mancano i dati di '+K.noProf.join(', ')+'.\n';
