@@ -1039,7 +1039,7 @@ function temps(r){ r=r||R; let M=null; try{ M=lavModel(calc(r),r); }catch(e){ co
   return {oli:M.oli,lisc:M.lisc,tipo:M.tipo,min:M.Tmin}; }
 function lavorazione(K){ const M=lavModel(K); if(!M) return null;
   const forza=x=> x>=8? 'accelera nettamente' : x>=3? 'accelera' : 'accelera un po\'';
-  const avv=M.contr.filter(c=>c.pts>=1&&!/^Temperatura|^Catene|^Grassi lunghi/.test(c.lab)).map(c=>`${c.lab}: ${c.lab.startsWith('Lisciva')?'addensa un po\' prima':forza(c.pts)}.`);
+  const avv=M.contr.filter(c=>c.pts>=1&&!/^Temperatura|^Catene|^Grassi lunghi/.test(c.lab)).map(c=>`${c.lab}: ${c.lab.startsWith('Lisciva')?'addensa un po\' prima':forza(c.pts)}${c.lab.startsWith('Sansa')?' (mono e digliceridi, non l\'oleico: vedi Diario)':''}.`);
   const verd=(M.lenta?'Molto lenta: aspetta una trace leggera prima di dividere, i colori tendono a fondersi. ':'')+M.verdTxt+(M.bordo?' (al limite: decide quanto frulli)':'')+(M.gate?` Limite dato da ${M.gate}.`:'');
   const istr=[`Versa: oli ${M.oli} °C, lisciva ${M.lisc} °C. Gel e stampo: vedi procedura.`];
   return {M,P:M.P,verd,istr,avv,avvLong:avv.concat(M.note),istrLong:[`Oli a ${M.oli} °C, lisciva a ${M.lisc} °C.`, M.passoStampo]}; }
