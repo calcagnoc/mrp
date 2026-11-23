@@ -490,6 +490,26 @@ optgroup{font-weight:700;font-style:normal}
   <button type="button" class="sm ghost" id="sem-all" hidden style="margin-top:6px"></button>
   </details>
 
+  <details class="sec" id="consigliere" open data-rt="analisi"><summary>Consigliere</summary>
+    <div class="hint" id="c-intro">Chiedi un parere sulla ricetta aperta: la domanda parte con ricetta, semaforo e Guida come contesto. Usa il tuo account Claude; alla prima domanda ti viene chiesto il consenso.</div>
+    <div class="row" style="margin-top:8px;align-items:end">
+      <label style="flex:3 1 220px">Domanda <input id="c-q" placeholder="es. Posso aggiungere l'indaco? Cosa cambia se tolgo il karité?"></label>
+      <button class="primary" id="c-ask">Chiedi</button>
+      <button id="c-stop" hidden>Ferma</button>
+    </div>
+    <div class="chips" style="margin-top:8px">
+      <button class="chip" data-q="Valuta questa ricetta nel complesso: punti di forza, debolezze e la prima cosa che cambieresti.">Valuta la ricetta</button>
+      <button class="chip" data-q="Usando i prezzi al kg della sezione COSTI E DISPONIBILITÀ, proponi due versioni più economiche di questa ricetta con percentuali concrete per ogni olio, il risparmio stimato in euro a pane per ciascuna e cosa cambia negli indicatori (laurico+miristico, saturi, PUFA, ricinoleico). Preferisci gli oli già in magazzino. Non proporre oli senza prezzo noto.">Più economica</button>
+      <button class="chip" data-q="Riformula questa ricetta usando SOLO gli oli che ho in magazzino in quantità sufficiente (sezione COSTI E DISPONIBILITÀ), mantenendo la destinazione e il semaforo verde: percentuali concrete e indicatori attesi.">Con quello che ho</button>
+      <button class="chip" data-q="Come migliorare la schiuma con acqua fredda?">Schiuma a freddo</button>
+      <button class="chip" data-q="Come renderla più delicata per pelle sensibile?">Più delicata</button>
+    </div>
+    <div id="c-out" class="g-it" style="margin-top:10px;white-space:pre-wrap;font-size:.9rem" hidden></div>
+    <div id="c-cnote" class="hint keep"></div>
+    <div id="c-fb" class="bt-acts" style="justify-content:flex-start;margin-top:6px" hidden><span class="hint" id="c-fblab">Questa risposta è</span><button class="sm" id="c-ok">Giusta</button><button class="sm" id="c-ko">Sbagliata, perché…</button></div>
+    <div id="c-fbform" class="bt-form" hidden style="margin-top:6px"><label style="display:grid;gap:4px;font-size:.78rem;color:var(--muted)">Cosa c'è di sbagliato e qual è la regola giusta (una frase: diventa una lezione per il consigliere) <input id="c-fbtext" placeholder="es. il cocco al 20 % va bene per le mani normali, non proporre sempre il babassu"></label><div class="bt-acts"><button class="ghost" id="c-fbno">Annulla</button><button class="primary" id="c-fbok">Salva la lezione</button></div></div>
+  </details>
+
   <details class="sec" open data-rt="analisi"><summary>Profilo acidi grassi (sulla ricetta)</summary>
   <div class="kv" id="profile"></div>
   <div class="hint" id="eut-note" style="margin-top:8px"></div>
@@ -509,25 +529,6 @@ optgroup{font-weight:700;font-style:normal}
   <div class="hint" style="margin-top:6px">Ogni ricetta è giudicata con le soglie della propria destinazione. Il costo per pane usa i tuoi prezzi e lo stesso numero di pani.</div>
   </details>
 
-  <details class="sec" id="consigliere" hidden data-rt="analisi"><summary>Consigliere</summary>
-    <div class="hint">Chiedi un parere sulla ricetta aperta: la domanda parte con ricetta, semaforo e Guida come contesto. Usa il tuo account Claude; alla prima domanda ti viene chiesto il consenso.</div>
-    <div class="row" style="margin-top:8px;align-items:end">
-      <label style="flex:3 1 220px">Domanda <input id="c-q" placeholder="es. Posso aggiungere l'indaco? Cosa cambia se tolgo il karité?"></label>
-      <button class="primary" id="c-ask">Chiedi</button>
-      <button id="c-stop" hidden>Ferma</button>
-    </div>
-    <div class="chips" style="margin-top:8px">
-      <button class="chip" data-q="Valuta questa ricetta nel complesso: punti di forza, debolezze e la prima cosa che cambieresti.">Valuta la ricetta</button>
-      <button class="chip" data-q="Usando i prezzi al kg della sezione COSTI E DISPONIBILITÀ, proponi due versioni più economiche di questa ricetta con percentuali concrete per ogni olio, il risparmio stimato in euro a pane per ciascuna e cosa cambia negli indicatori (laurico+miristico, saturi, PUFA, ricinoleico). Preferisci gli oli già in magazzino. Non proporre oli senza prezzo noto.">Più economica</button>
-      <button class="chip" data-q="Riformula questa ricetta usando SOLO gli oli che ho in magazzino in quantità sufficiente (sezione COSTI E DISPONIBILITÀ), mantenendo la destinazione e il semaforo verde: percentuali concrete e indicatori attesi.">Con quello che ho</button>
-      <button class="chip" data-q="Come migliorare la schiuma con acqua fredda?">Schiuma a freddo</button>
-      <button class="chip" data-q="Come renderla più delicata per pelle sensibile?">Più delicata</button>
-    </div>
-    <div id="c-out" class="g-it" style="margin-top:10px;white-space:pre-wrap;font-size:.9rem" hidden></div>
-    <div id="c-note" class="hint"></div>
-    <div id="c-fb" class="bt-acts" style="justify-content:flex-start;margin-top:6px" hidden><span class="hint">Questa risposta è</span><button class="sm" id="c-ok">Giusta</button><button class="sm" id="c-ko">Sbagliata, perché…</button></div>
-    <div id="c-fbform" class="bt-form" hidden style="margin-top:6px"><label style="display:grid;gap:4px;font-size:.78rem;color:var(--muted)">Cosa c'è di sbagliato e qual è la regola giusta (una frase: diventa una lezione per il consigliere) <input id="c-fbtext" placeholder="es. il cocco al 20 % va bene per le mani normali, non proporre sempre il babassu"></label><div class="bt-acts"><button class="ghost" id="c-fbno">Annulla</button><button class="primary" id="c-fbok">Salva la lezione</button></div></div>
-  </details>
   <div class="actbar" style="margin-top:14px" data-rt="formula">
   <div class="act-l">Questa ricetta</div>
   <div class="mg-check" id="mg-check"></div>
@@ -1180,7 +1181,16 @@ const _render=render; render=function(){ _render(); renderMold(); };
 
 // ---------- consigliere (sample) ----------
 let sampleFn=null, cctl=null, LASTQ=null;
-(async()=>{ try{ sampleFn=await claude.use('sample'); }catch(e){ sampleFn=null; } if(sampleFn){ $('#consigliere').hidden=false; } })();
+(async()=>{ try{ sampleFn=await claude.use('sample'); }catch(e){ sampleFn=null; } setCMode(); })();
+// Senza account Claude collegato (app su GitHub) il consigliere copia la domanda completa da incollare in una chat con Claude
+function setCMode(){ const copia=!sampleFn; $('#consigliere').hidden=false; $('#c-ask').textContent= copia? 'Copia per Claude' : 'Chiedi';
+  $('#c-intro').textContent= copia? 'Scrivi una domanda o tocca una domanda pronta: la copio negli appunti insieme a ricetta, semaforo, profilo, costi, guida, lezioni e batch. Incollala intera in una chat con Claude, senza accorciarla.' : 'Chiedi un parere sulla ricetta aperta: la domanda parte con ricetta, semaforo e Guida come contesto. Usa il tuo account Claude; alla prima domanda ti viene chiesto il consenso.'; }
+async function copiaPerClaude(q){ const t=contesto()+q.trim(), note=$('#c-cnote'); LASTQ={q:q.trim(), a:''};
+  let ok=false; try{ await navigator.clipboard.writeText(t); ok=true; }catch(e){ try{ const ta=document.createElement('textarea'); ta.value=t; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); ok=document.execCommand('copy'); ta.remove(); }catch(e2){} }
+  const out=$('#c-out');
+  if(ok){ out.hidden=true; note.textContent='Copiato ('+Math.round(t.length/1000)+' mila caratteri): incollalo intero in una chat con Claude.'; toast('Copiato: incollalo in una chat con Claude'); }
+  else { out.hidden=false; out.innerHTML=''; const ta=document.createElement('textarea'); ta.readOnly=true; ta.value=t; ta.style.cssText='width:100%;min-height:180px;font:inherit;font-size:.8rem'; out.appendChild(ta); ta.focus(); ta.select(); note.textContent='Copia automatica non riuscita: il testo è selezionato qui sopra, copialo a mano.'; }
+  $('#c-fblab').textContent='Se il parere di Claude è sbagliato:'; $('#c-ok').hidden=true; $('#c-fb').hidden=false; $('#c-fbform').hidden=true; }
 function costiCtx(K){ try{ const pani=+$('#c-pani').value||R.pani||8; const C=costo(K,R,pani,0); let S=null; try{ S=magState(); }catch(e){}
     const disp=k=>{ if(!S) return ''; const P=S.P[ckey(k)]||S.P[k]; return P? ` · in magazzino ${fmtQ(Math.max(0,P.disp),P.u)}` : ' · non in magazzino'; };
     let s='Costo attuale: '+fmt(C.tot,2)+' € di materie prime a batch, '+fmt(C.perPane,2)+' € a pane ('+pani+' pani).\nIngredienti della ricetta (g · €/kg · € a batch · disponibilità):\n'+C.L.map(l=>`  ${l.nome}: ${fmt(l.g,0)} g · ${l.eur!=null? fmt(l.eur/(l.g/1000),2)+' €/kg · '+fmt(l.eur,2)+' €' : 'prezzo sconosciuto'}${disp(l.key)}`).join('\n');
@@ -1214,7 +1224,7 @@ ${batchCtx()}
 
 === DOMANDA ===
 `; }
-async function ask(q){ if(!sampleFn||!q.trim()) return; const out=$('#c-out'), note=$('#c-note'); out.hidden=false; out.textContent='Sto pensando…'; note.textContent=''; $('#c-ask').disabled=true; $('#c-stop').hidden=false;
+async function ask(q){ if(!q.trim()) return; if(!sampleFn) return copiaPerClaude(q); const out=$('#c-out'), note=$('#c-cnote'); $('#c-fblab').textContent='Questa risposta è'; $('#c-ok').hidden=false; out.hidden=false; out.textContent='Sto pensando…'; note.textContent=''; $('#c-ask').disabled=true; $('#c-stop').hidden=false;
   cctl=new AbortController();
   try{ const {text,truncated}=await sampleFn(contesto()+q.trim(), {signal:cctl.signal, modelTier:'default', onText:({text})=>{ out.textContent=text; }});
     out.textContent=text; if(truncated) note.textContent='Risposta tagliata: chiedi una cosa più specifica.'; LASTQ={q:q.trim(), a:text}; $('#c-fb').hidden=false; $('#c-fbform').hidden=true; }
