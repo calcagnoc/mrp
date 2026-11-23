@@ -501,8 +501,9 @@ optgroup{font-weight:700;font-style:normal}
   <div class="twrap" style="margin-top:8px"><table id="fa-table"><thead><tr><th>Acido</th><th class="n">%</th><th>Principale fonte</th></tr></thead><tbody></tbody></table></div>
   </details>
   <details class="sec sub"><summary>Acidi grassi di ciascun olio</summary>
+  <div class="row" style="margin-top:8px;gap:6px" id="oilfa-mode"><button type="button" class="sm" data-m="ric">Punti sulla ricetta</button><button type="button" class="sm" data-m="olio">Profilo dell'olio</button></div>
   <div class="twrap" style="margin-top:8px"><table id="oilfa-table"></table></div>
-  <div class="hint keep" style="margin-top:6px">Le quote degli oli si cambiano anche qui (sono le stesse della Formula; la somma, nell'ultima riga, deve fare 100). Valori in % sull'olio; l'ultima riga è la % sulla ricetta. Per sapere quanto un olio porta alla ricetta: % sull'olio × quota dell'olio (karité 42 % di stearico × 0,20 = 8,4 punti).</div>
+  <div class="hint keep" style="margin-top:6px">Le quote degli oli si cambiano anche qui e con ✕ si toglie un olio (come nella Formula; la somma, nell'ultima riga, deve fare 100; per tenere le modifiche: Salva). «Punti sulla ricetta»: quanto ogni olio porta di ciascun acido alla ricetta; cambiano con la quota e sommati in colonna danno l'ultima riga. «Profilo dell'olio»: la composizione dell'olio stesso, che non cambia con la quota (karité 42 % di stearico × quota 0,20 = 8,4 punti).</div>
   </details></details>
 
 
@@ -1075,26 +1076,33 @@ function renderChains(K){ const el=$('#chains'); if(!el) return; if(!K.profOK){ 
     h+='</div>'; });
   el.innerHTML=h+'<div class="hint" style="margin-top:6px">Ogni angolo della linea è un atomo di carbonio; il carbonio 1 è quello del gruppo COOH, a destra. Le linee doppie sono i doppi legami (cis negli oli naturali): piegano la catena, le molecole si impacchettano peggio e il grasso fonde a temperatura più bassa. Il disegno è semplificato e non mostra la piega. Il ricinoleico ha in più un gruppo OH sul carbonio 12. Le cere (cera d\'api, candelilla…) sono soprattutto esteri, non acidi grassi: qui compare solo la loro piccola parte saponificabile.</div>'; }
 // acidi grassi di ciascun olio della ricetta (% sull'olio) + riga della ricetta (% sugli oli); quote degli oli modificabili anche qui
+let OILFA_MODE='ric'; try{ OILFA_MODE=localStorage.getItem('mrp-oilfa')||'ric'; }catch(e){}
 function renderOilFA(K){ const t=$('#oilfa-table'); if(!t) return; const oils=K.oils;
+  document.querySelectorAll('#oilfa-mode [data-m]').forEach(b=>b.classList.toggle('primary',b.dataset.m===OILFA_MODE));
   if(!oils.length){ t.innerHTML='<tbody><tr><td class="hint">Nessun olio nella ricetta.</td></tr></tbody>'; t.dataset.sig=''; return; }
   const cols=FA.filter(([k])=>oils.some(o=>o.c.fa&&(+o.c.fa[k]||0)>0));
   const v=x=>x>=1? fmt(x,0) : x>0? fmt(x,1) : '—';
+  const pt=x=>x>=0.05? fmt(x,1) : '—';
+  const cell=(o,k)=>{ const f=+o.c.fa[k]||0; return OILFA_MODE==='ric'? pt(f*(+o.pct||0)/100) : v(f); };
   const AB={C8:'Capril.',C10:'Capric.',C20:'Arachid.',C16_1:'Palmitol.',C20_1:'Gondoico',C22_1:'Erucico',RIC:'Ricinol.',C18_3:'Linolen.'};
   const shk=(k,n)=>AB[k]||n.replace(/ C\d+(:\d)?$/,'');
   const tot=()=>`<span class="${Math.abs(K.pctSum-100)>0.05?'bad':''}" title="Somma delle quote: deve fare 100">${fmt(K.pctSum,1)}</span>`;
   const rec=([k])=>K.profOK? fmt(K.prof[k],1) : '—';
-  const sig=oils.map(o=>o.c.id).join('|')+'#'+cols.map(c=>c[0]).join(',');
+  const sig=OILFA_MODE+'#'+oils.map(o=>o.c.id).join('|')+'#'+cols.map(c=>c[0]).join(',');
   if(t.dataset.sig===sig){ // stessa struttura: aggiorna i numeri senza ricostruire (non perde il cursore mentre scrivi)
-    t.querySelectorAll('input[data-oi]').forEach(inp=>{ if(document.activeElement!==inp) inp.value=oils[+inp.dataset.oi].pct; });
+    t.querySelectorAll('input[data-oi]').forEach(inp=>{ const i=+inp.dataset.oi, o=oils[i]; if(document.activeElement!==inp) inp.value=o.pct;
+      if(o.c.fa){ const tds=inp.closest('tr').children; cols.forEach(([k],j)=>{ tds[j+2].textContent=cell(o,k); }); } });
     const last=t.querySelector('tr.ric'); if(last){ last.children[1].innerHTML=tot(); cols.forEach((c,j)=>{ last.children[j+2].textContent=rec(c); }); }
     return; }
   t.dataset.sig=sig;
   let h='<thead><tr><th>Olio</th><th class="n">% ric.</th>'+cols.map(([k,n])=>`<th class="n" title="${esc(n)}">${esc(shk(k,n))}</th>`).join('')+'</tr></thead><tbody>';
-  h+=oils.map((o,i)=>`<tr><td>${esc(o.c.nome)}</td><td class="n"><input type="number" step="0.5" min="0" max="100" value="${o.pct}" data-oi="${i}" aria-label="% di ${esc(o.c.nome)}"></td>`+(o.c.fa? cols.map(([k])=>`<td class="n">${v(+o.c.fa[k]||0)}</td>`).join('') : `<td colspan="${cols.length}" class="hint">profilo degli acidi grassi mancante</td>`)+'</tr>').join('');
+  h+=oils.map((o,i)=>`<tr><td><button type="button" class="sm ghost" data-odel="${i}" title="Togli ${esc(o.c.nome)} dalla ricetta" aria-label="Togli ${esc(o.c.nome)}" style="padding:0 6px;margin-right:4px">✕</button>${esc(o.c.nome)}</td><td class="n"><input type="number" step="0.5" min="0" max="100" value="${o.pct}" data-oi="${i}" aria-label="% di ${esc(o.c.nome)}"></td>`+(o.c.fa? cols.map(([k])=>`<td class="n">${cell(o,k)}</td>`).join('') : `<td colspan="${cols.length}" class="hint">profilo degli acidi grassi mancante</td>`)+'</tr>').join('');
   h+=`<tr class="ric" style="font-weight:700"><td>Ricetta</td><td class="n">${tot()}</td>`+cols.map(c=>`<td class="n">${rec(c)}</td>`).join('')+'</tr></tbody>';
   t.innerHTML=h;
   t.querySelectorAll('input[data-oi]').forEach(inp=>inp.addEventListener('input',e=>{ const i=+e.target.dataset.oi; if(!R.oli[i]) return; R.oli[i].pct=+e.target.value||0;
-    const f=document.querySelector(`#oil-table input[data-i="${i}"]`); if(f) f.value=e.target.value; renderOut(); })); }
+    const f=document.querySelector(`#oil-table input[data-i="${i}"]`); if(f) f.value=e.target.value; renderOut(); }));
+  t.querySelectorAll('[data-odel]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.odel, x=R.oli[i]; if(!x) return; R.oli.splice(i,1); render(); toast('Olio tolto dalla ricetta: per tenerlo così premi Salva'); }); }
+document.querySelectorAll('#oilfa-mode [data-m]').forEach(b=>b.onclick=()=>{ OILFA_MODE=b.dataset.m; try{ localStorage.setItem('mrp-oilfa',OILFA_MODE); }catch(e){} renderOilFA(calc()); });
 function renderOut(K){
   K=K||calc(); try{ renderLav(K); }catch(e){ console.error(e); } try{ renderChains(K); }catch(e){ console.error(e); }
   $('#pct-tot').textContent=fmt(K.pctSum); $('#pct-tot').className='n tot'+(Math.abs(K.pctSum-100)>0.05?' bad':''); $('#g-tot').textContent=fmt(K.gSum,0);
