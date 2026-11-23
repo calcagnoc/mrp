@@ -63,6 +63,7 @@ table{border-collapse:collapse;width:100%;font-size:.86rem}
 th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
 td.n,th.n{text-align:right}
+.kv .selbox{cursor:pointer;border:2px solid transparent;transition:border-color .15s} .kv .selbox:hover{border-color:var(--line)} .kv .selbox.on{border-color:var(--accent)} .kv .selbox.on .l{color:var(--accent);font-weight:600} #oilfa-table .hl{background:color-mix(in srgb,var(--accent) 14%,var(--surface))} #oilfa-table th.hl{color:var(--accent)} #oilfa-table tr.ric td.hl{background:color-mix(in srgb,var(--accent) 24%,var(--surface))}
 #oilfa-table th{letter-spacing:0;font-size:.66rem;padding:5px 4px} #oilfa-table td{padding:5px 4px} #oilfa-table input[type=number]{width:60px;padding:3px 4px} #oilfa-table .bad{color:var(--bad,#b3261e)} #oilfa-table th:first-child,#oilfa-table td:first-child{position:sticky;left:0;background:var(--surface);z-index:1}
 td input[type=number]{width:74px;padding:4px 6px}
 td select{padding:4px 6px}
@@ -1076,6 +1077,8 @@ function renderChains(K){ const el=$('#chains'); if(!el) return; if(!K.profOK){ 
     h+='</div>'; });
   el.innerHTML=h+'<div class="hint" style="margin-top:6px">Ogni angolo della linea è un atomo di carbonio; il carbonio 1 è quello del gruppo COOH, a destra. Le linee doppie sono i doppi legami (cis negli oli naturali): piegano la catena, le molecole si impacchettano peggio e il grasso fonde a temperatura più bassa. Il disegno è semplificato e non mostra la piega. Il ricinoleico ha in più un gruppo OH sul carbonio 12. Le cere (cera d\'api, candelilla…) sono soprattutto esteri, non acidi grassi: qui compare solo la loro piccola parte saponificabile.</div>'; }
 // acidi grassi di ciascun olio della ricetta (% sull'olio) + riga della ricetta (% sugli oli); quote degli oli modificabili anche qui
+let FA_SEL=null; // riquadro del profilo selezionato: evidenzia le sue colonne nella tabella per olio
+const FA_SELS={SAT:k=>GRP[k]==='SAT', INS:k=>GRP[k]!=='SAT', MUFA:k=>GRP[k]==='MUFA', RIC:k=>k==='RIC', PUFA:k=>GRP[k]==='PUFA', LM:k=>k==='C12'||k==='C14'};
 let OILFA_MODE='ric'; try{ OILFA_MODE=localStorage.getItem('mrp-oilfa')||'ric'; }catch(e){}
 function renderOilFA(K){ const t=$('#oilfa-table'); if(!t) return; const oils=K.oils;
   document.querySelectorAll('#oilfa-mode [data-m]').forEach(b=>b.classList.toggle('primary',b.dataset.m===OILFA_MODE));
@@ -1088,16 +1091,17 @@ function renderOilFA(K){ const t=$('#oilfa-table'); if(!t) return; const oils=K.
   const shk=(k,n)=>AB[k]||n.replace(/ C\d+(:\d)?$/,'');
   const tot=()=>`<span class="${Math.abs(K.pctSum-100)>0.05?'bad':''}" title="Somma delle quote: deve fare 100">${fmt(K.pctSum,1)}</span>`;
   const rec=([k])=>K.profOK? fmt(K.prof[k],1) : '—';
-  const sig=OILFA_MODE+'#'+oils.map(o=>o.c.id).join('|')+'#'+cols.map(c=>c[0]).join(',');
+  const hl=k=>FA_SEL&&FA_SELS[FA_SEL]&&FA_SELS[FA_SEL](k)?' hl':'';
+  const sig=OILFA_MODE+'#'+(FA_SEL||'')+'#'+oils.map(o=>o.c.id).join('|')+'#'+cols.map(c=>c[0]).join(',');
   if(t.dataset.sig===sig){ // stessa struttura: aggiorna i numeri senza ricostruire (non perde il cursore mentre scrivi)
     t.querySelectorAll('input[data-oi]').forEach(inp=>{ const i=+inp.dataset.oi, o=oils[i]; if(document.activeElement!==inp) inp.value=o.pct;
       if(o.c.fa){ const tds=inp.closest('tr').children; cols.forEach(([k],j)=>{ tds[j+2].textContent=cell(o,k); }); } });
     const last=t.querySelector('tr.ric'); if(last){ last.children[1].innerHTML=tot(); cols.forEach((c,j)=>{ last.children[j+2].textContent=rec(c); }); }
     return; }
   t.dataset.sig=sig;
-  let h='<thead><tr><th>Olio</th><th class="n">% ric.</th>'+cols.map(([k,n])=>`<th class="n" title="${esc(n)}">${esc(shk(k,n))}</th>`).join('')+'</tr></thead><tbody>';
-  h+=oils.map((o,i)=>`<tr><td><button type="button" class="sm ghost" data-odel="${i}" title="Togli ${esc(o.c.nome)} dalla ricetta" aria-label="Togli ${esc(o.c.nome)}" style="padding:0 6px;margin-right:4px">✕</button>${esc(o.c.nome)}</td><td class="n"><input type="number" step="0.5" min="0" max="100" value="${o.pct}" data-oi="${i}" aria-label="% di ${esc(o.c.nome)}"></td>`+(o.c.fa? cols.map(([k])=>`<td class="n">${cell(o,k)}</td>`).join('') : `<td colspan="${cols.length}" class="hint">profilo degli acidi grassi mancante</td>`)+'</tr>').join('');
-  h+=`<tr class="ric" style="font-weight:700"><td>Ricetta</td><td class="n">${tot()}</td>`+cols.map(c=>`<td class="n">${rec(c)}</td>`).join('')+'</tr></tbody>';
+  let h='<thead><tr><th>Olio</th><th class="n">% ric.</th>'+cols.map(([k,n])=>`<th class="n${hl(k)}" title="${esc(n)}">${esc(shk(k,n))}</th>`).join('')+'</tr></thead><tbody>';
+  h+=oils.map((o,i)=>`<tr><td><button type="button" class="sm ghost" data-odel="${i}" title="Togli ${esc(o.c.nome)} dalla ricetta" aria-label="Togli ${esc(o.c.nome)}" style="padding:0 6px;margin-right:4px">✕</button>${esc(o.c.nome)}</td><td class="n"><input type="number" step="0.5" min="0" max="100" value="${o.pct}" data-oi="${i}" aria-label="% di ${esc(o.c.nome)}"></td>`+(o.c.fa? cols.map(([k])=>`<td class="n${hl(k)}">${cell(o,k)}</td>`).join('') : `<td colspan="${cols.length}" class="hint">profilo degli acidi grassi mancante</td>`)+'</tr>').join('');
+  h+=`<tr class="ric" style="font-weight:700"><td>Ricetta</td><td class="n">${tot()}</td>`+cols.map(c=>`<td class="n${hl(c[0])}">${rec(c)}</td>`).join('')+'</tr></tbody>';
   t.innerHTML=h;
   t.querySelectorAll('input[data-oi]').forEach(inp=>inp.addEventListener('input',e=>{ const i=+e.target.dataset.oi; if(!R.oli[i]) return; R.oli[i].pct=+e.target.value||0;
     const f=document.querySelector(`#oil-table input[data-i="${i}"]`); if(f) f.value=e.target.value; renderOut(); }));
@@ -1113,8 +1117,9 @@ function renderOut(K){
   $('#o-detail').textContent=K.gSum? `${fmt(K.naohTeo,2)} × ${(1-R.sf/100).toFixed(2)} = ${fmt(K.naohSc,2)} g` + (K.comp?` + ${fmt(K.comp,2)} g per l'acido citrico`:'') + (R.pur<100?` ÷ ${R.pur} % di purezza`:'') + ` → ${fmt(K.naoh,1)} g. Acqua = NaOH × ${100-R.conc}/${R.conc} (lisciva al ${R.conc} %). Resa a fine cura ≈ ${fmt(K.batch*0.895,0)} g.` : 'Aggiungi gli oli.';
   // profile
   const p=$('#profile'); const g=K.grp;
-  p.innerHTML=[['Saturi',g.SAT],['Insaturi (mono + ricino + poli)',g.MUFA+g.RIC+g.PUFA],['Monoinsaturi',g.MUFA],['Ricinoleico',g.RIC],['Polinsaturi',g.PUFA],['Laurico+miristico',K.ind.LM]].map(([l,v])=>`<div class="box"><div class="v">${K.profOK?fmt(v):'—'} %</div><div class="l">${l}</div></div>`).join('')
+  p.innerHTML=[['Saturi',g.SAT,'SAT'],['Insaturi (mono + ricino + poli)',g.MUFA+g.RIC+g.PUFA,'INS'],['Monoinsaturi',g.MUFA,'MUFA'],['Ricinoleico',g.RIC,'RIC'],['Polinsaturi',g.PUFA,'PUFA'],['Laurico+miristico',K.ind.LM,'LM']].map(([l,v,sel])=>`<div class="box selbox${FA_SEL===sel?' on':''}" data-sel="${sel}" role="button" tabindex="0" title="Tocca per evidenziare questi acidi nella tabella in basso"><div class="v">${K.profOK?fmt(v):'—'} %</div><div class="l">${l}</div></div>`).join('')
     + `<div class="box"><div class="v">${K.profOK&&K.eut?fmt(K.eut.pct,0)+' %':'—'}${K.profOK&&K.eut?' <span style="font-size:.72rem;font-weight:400">~'+fmt(Math.round(K.eut.g/10)*10,0)+' g</span>':''}</div><div class="l">Eutettico (schiuma a freddo)</div></div>`;
+  p.querySelectorAll('.selbox').forEach(b=>{ const go=()=>{ FA_SEL = FA_SEL===b.dataset.sel? null : b.dataset.sel; p.querySelectorAll('.selbox').forEach(x=>x.classList.toggle('on',x.dataset.sel===FA_SEL)); const t=$('#oilfa-table'); if(t){ renderOilFA(K); if(FA_SEL){ const d=t.closest('details'); if(d&&!d.open) d.open=true; } } }; b.onclick=go; b.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } }; });
   const en=$('#eut-note'); if(en){ const E=K.eut; const viso=R.dest.startsWith('viso'); const rng=v=>`${fmt(Math.round(v.freeMin/10)*10,0)}-${fmt(Math.round(v.freeMax/10)*10,0)} g`;
     en.innerHTML = (K.profOK&&E&&E.g>0)? (E.tetto
       ? `<b>Al tetto</b>: i laurici hanno già tutti gli insaturi solubili (oleato, palmitoleato) con cui mescolarsi. Altro babassu o cocco non aggiunge schiuma in acqua fredda, rende il pane più duro e più sgrassante. Per più schiuma: ricino, o 1-2 punti di superfat in meno.`
