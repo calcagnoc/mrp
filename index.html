@@ -485,30 +485,12 @@ optgroup{font-weight:700;font-style:normal}
   <div id="lav" style="margin-top:8px"></div>
   </details>
 
-  <details class="sec" open data-rt="analisi"><summary>Semaforo per la destinazione <span class="cnt" id="sem-cnt"></span></summary>
+  <details class="sec" open data-rt="analisi"><summary>Semaforo per la destinazione <span class="cnt" id="sem-cnt"></span><button type="button" class="sm primary" id="c-ask" title="Copia ricetta, acidi grassi, semaforo e regole della linea da incollare in una chat con Claude" style="margin-left:auto;text-transform:none;letter-spacing:0">Copia per Claude</button></summary>
+  <div id="c-out" style="margin-top:8px" hidden></div>
   <div class="ind" id="semaforo"></div>
   <button type="button" class="sm ghost" id="sem-all" hidden style="margin-top:6px"></button>
   </details>
 
-  <details class="sec" id="consigliere" open data-rt="analisi"><summary>Consigliere</summary>
-    <div class="hint" id="c-intro">Chiedi un parere sulla ricetta aperta: la domanda parte con ricetta, semaforo e Guida come contesto. Usa il tuo account Claude; alla prima domanda ti viene chiesto il consenso.</div>
-    <div class="row" style="margin-top:8px;align-items:end">
-      <label style="flex:3 1 220px">Domanda <input id="c-q" placeholder="es. Posso aggiungere l'indaco? Cosa cambia se tolgo il karité?"></label>
-      <button class="primary" id="c-ask">Chiedi</button>
-      <button id="c-stop" hidden>Ferma</button>
-    </div>
-    <div class="chips" style="margin-top:8px">
-      <button class="chip" data-q="Valuta questa ricetta nel complesso: punti di forza, debolezze e la prima cosa che cambieresti.">Valuta la ricetta</button>
-      <button class="chip" data-q="Usando i prezzi al kg della sezione COSTI E DISPONIBILITÀ, proponi due versioni più economiche di questa ricetta con percentuali concrete per ogni olio, il risparmio stimato in euro a pane per ciascuna e cosa cambia negli indicatori (laurico+miristico, saturi, PUFA, ricinoleico). Preferisci gli oli già in magazzino. Non proporre oli senza prezzo noto.">Più economica</button>
-      <button class="chip" data-q="Riformula questa ricetta usando SOLO gli oli che ho in magazzino in quantità sufficiente (sezione COSTI E DISPONIBILITÀ), mantenendo la destinazione e il semaforo verde: percentuali concrete e indicatori attesi.">Con quello che ho</button>
-      <button class="chip" data-q="Come migliorare la schiuma con acqua fredda?">Schiuma a freddo</button>
-      <button class="chip" data-q="Come renderla più delicata per pelle sensibile?">Più delicata</button>
-    </div>
-    <div id="c-out" class="g-it" style="margin-top:10px;white-space:pre-wrap;font-size:.9rem" hidden></div>
-    <div id="c-cnote" class="hint keep"></div>
-    <div id="c-fb" class="bt-acts" style="justify-content:flex-start;margin-top:6px" hidden><span class="hint" id="c-fblab">Questa risposta è</span><button class="sm" id="c-ok">Giusta</button><button class="sm" id="c-ko">Sbagliata, perché…</button></div>
-    <div id="c-fbform" class="bt-form" hidden style="margin-top:6px"><label style="display:grid;gap:4px;font-size:.78rem;color:var(--muted)">Cosa c'è di sbagliato e qual è la regola giusta (una frase: diventa una lezione per il consigliere) <input id="c-fbtext" placeholder="es. il cocco al 20 % va bene per le mani normali, non proporre sempre il babassu"></label><div class="bt-acts"><button class="ghost" id="c-fbno">Annulla</button><button class="primary" id="c-fbok">Salva la lezione</button></div></div>
-  </details>
 
   <details class="sec" open data-rt="analisi"><summary>Profilo acidi grassi (sulla ricetta)</summary>
   <div class="kv" id="profile"></div>
@@ -1127,6 +1109,9 @@ function riepilogo(){ const K=calc(); const rule=RULES[R.dest];
   s+=`NaOH ${fmt(K.naoh)} g · acqua ${fmt(K.acqua)} g · batch ~${fmt(K.batch,0)} g\n`;
   if(K.adds.length) s+='Additivi:\n'+K.adds.map(a=>`  ${a.d.nome}: ${fmt(a.g,1)} g (${a.pct} %) — ${a.d.dove}`).join('\n')+'\n';
   if(K.profOK) s+=`SAT ${fmt(K.grp.SAT)} · MUFA ${fmt(K.grp.MUFA)} · PUFA ${fmt(K.grp.PUFA)} · ricinoleico ${fmt(K.grp.RIC)} · laurico+miristico ${fmt(K.ind.LM)} · attivi a freddo ${fmt(K.ind.AF)}\n`;
+  if(K.profOK){ s+='Acidi grassi della ricetta (% sugli oli · da dove vengono):\n'+FA.filter(([k])=>K.prof[k]>=0.05).map(([k,n])=>{ const so=(K.src[k]||[]).slice().sort((x,y)=>y[1]-x[1]).filter(x=>x[1]>0).slice(0,3).map(x=>`${x[0]} ${fmt(x[1]*10000/(K.prof[k]*K.gSum),0)} %`); return `  ${n}: ${fmt(K.prof[k])} %${so.length?' · '+so.join(', '):''}`; }).join('\n')+'\n';
+    s+='Profilo di ciascun olio (% dei suoi acidi grassi, voci ≥ 1 %):\n'+K.oils.filter(o=>o.c.fa).map(o=>`  ${o.c.nome}: `+FA.filter(([k])=>(+o.c.fa[k]||0)>=1).map(([k,n])=>`${n.replace(/ C\d+(:\d)?$/,'')} ${fmt(+o.c.fa[k],0)}`).join(', ')).join('\n')+'\n'; }
+  else if(K.noProf&&K.noProf.length) s+='Profilo acidi grassi incompleto: mancano i dati di '+K.noProf.join(', ')+'.\n';
   if(K.profOK&&K.eut) s+=`Eutettico laurati/insaturi solubili (stima ±30 g, coppie in moli laurato+miristato con oleato+palmitoleato, due ipotesi sul superfat): ~${fmt(Math.round(K.eut.g/10)*10,0)} g = ${fmt(K.eut.pct,0)} % sugli oli; insaturi solubili liberi ~${fmt(Math.round(K.eut.freeMin/10)*10,0)}-${fmt(Math.round(K.eut.freeMax/10)*10,0)} g${K.eut.tetto?' → AL TETTO: altro laurico non aumenta la schiuma a freddo; per più schiuma ricino o meno superfat':K.eut.vicino?' → vicino al tetto':' → c\'è spazio: più laurico = più schiuma pronta'}${R.dest.startsWith('viso')?' (ma sul viso NON proporre più babassu/cocco: restare nella fascia laurico+miristico della destinazione)':''}. Non è un limite: è un criterio per decidere se alzare babassu/cocco.\n`;
   const AL=allergeni(K); if(AL.rows.length) s+='Allergeni da dichiarare (≥ 0,01 %): '+(AL.rows.filter(x=>x.dich).map(x=>x.nome).join(', ')||'nessuno')+'\n';
   s+='Semaforo:\n'+semaforo(K).map(x=>`  [${x.cls}] ${x.t} ${x.val}: ${x.m}`).join('\n')+'\n';
@@ -1179,18 +1164,9 @@ $('#m-shape').addEventListener('change',moldShape);
 $('#m-apply').onclick=()=>{ const K=calc(); const ratio=K.gSum? K.batch/K.gSum : 1.53; const oli=Math.round(moldVolume()*DENS/ratio/10)*10; if(!oli){ toast('Inserisci le misure.'); return; } R.tot=oli; $('#r-tot').value=oli; render(); toast('Oli totali impostati a '+oli+' g'); };
 const _render=render; render=function(){ _render(); renderMold(); };
 
-// ---------- consigliere (sample) ----------
-let sampleFn=null, cctl=null, LASTQ=null;
-(async()=>{ try{ sampleFn=await claude.use('sample'); }catch(e){ sampleFn=null; } setCMode(); })();
-// Senza account Claude collegato (app su GitHub) il consigliere copia la domanda completa da incollare in una chat con Claude
-function setCMode(){ const copia=!sampleFn; $('#consigliere').hidden=false; $('#c-ask').textContent= copia? 'Copia per Claude' : 'Chiedi';
-  $('#c-intro').textContent= copia? 'Scrivi una domanda o tocca una domanda pronta: la copio negli appunti insieme a ricetta, semaforo, profilo, costi, guida, lezioni e batch. Incollala intera in una chat con Claude, senza accorciarla.' : 'Chiedi un parere sulla ricetta aperta: la domanda parte con ricetta, semaforo e Guida come contesto. Usa il tuo account Claude; alla prima domanda ti viene chiesto il consenso.'; }
-async function copiaPerClaude(q){ const t=contesto()+q.trim(), note=$('#c-cnote'); LASTQ={q:q.trim(), a:''};
-  let ok=false; try{ await navigator.clipboard.writeText(t); ok=true; }catch(e){ try{ const ta=document.createElement('textarea'); ta.value=t; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); ok=document.execCommand('copy'); ta.remove(); }catch(e2){} }
-  const out=$('#c-out');
-  if(ok){ out.hidden=true; note.textContent='Copiato ('+Math.round(t.length/1000)+' mila caratteri): incollalo intero in una chat con Claude.'; toast('Copiato: incollalo in una chat con Claude'); }
-  else { out.hidden=false; out.innerHTML=''; const ta=document.createElement('textarea'); ta.readOnly=true; ta.value=t; ta.style.cssText='width:100%;min-height:180px;font:inherit;font-size:.8rem'; out.appendChild(ta); ta.focus(); ta.select(); note.textContent='Copia automatica non riuscita: il testo è selezionato qui sopra, copialo a mano.'; }
-  $('#c-fblab').textContent='Se il parere di Claude è sbagliato:'; $('#c-ok').hidden=true; $('#c-fb').hidden=false; $('#c-fbform').hidden=true; }
+// ---------- consigliere: copia per Claude ----------
+// L'app gira fuori da claude.ai: il parere si chiede incollando in una chat con Claude tutto il contesto della ricetta
+const C_DOMANDA='Valuta questa ricetta per la sua destinazione: va bene così o va modificata? Dai prima un giudizio netto (VA BENE / DA RITOCCARE / DA RIFARE), poi i motivi guardando acidi grassi, semaforo ed eutettico. Se va modificata, indica cosa cambiare con percentuali concrete per ogni olio e gli indicatori attesi dopo la modifica.';
 function costiCtx(K){ try{ const pani=+$('#c-pani').value||R.pani||8; const C=costo(K,R,pani,0); let S=null; try{ S=magState(); }catch(e){}
     const disp=k=>{ if(!S) return ''; const P=S.P[ckey(k)]||S.P[k]; return P? ` · in magazzino ${fmtQ(Math.max(0,P.disp),P.u)}` : ' · non in magazzino'; };
     let s='Costo attuale: '+fmt(C.tot,2)+' € di materie prime a batch, '+fmt(C.perPane,2)+' € a pane ('+pani+' pani).\nIngredienti della ricetta (g · €/kg · € a batch · disponibilità):\n'+C.L.map(l=>`  ${l.nome}: ${fmt(l.g,0)} g · ${l.eur!=null? fmt(l.eur/(l.g/1000),2)+' €/kg · '+fmt(l.eur,2)+' €' : 'prezzo sconosciuto'}${disp(l.key)}`).join('\n');
@@ -1224,20 +1200,11 @@ ${batchCtx()}
 
 === DOMANDA ===
 `; }
-async function ask(q){ if(!q.trim()) return; if(!sampleFn) return copiaPerClaude(q); const out=$('#c-out'), note=$('#c-cnote'); $('#c-fblab').textContent='Questa risposta è'; $('#c-ok').hidden=false; out.hidden=false; out.textContent='Sto pensando…'; note.textContent=''; $('#c-ask').disabled=true; $('#c-stop').hidden=false;
-  cctl=new AbortController();
-  try{ const {text,truncated}=await sampleFn(contesto()+q.trim(), {signal:cctl.signal, modelTier:'default', onText:({text})=>{ out.textContent=text; }});
-    out.textContent=text; if(truncated) note.textContent='Risposta tagliata: chiedi una cosa più specifica.'; LASTQ={q:q.trim(), a:text}; $('#c-fb').hidden=false; $('#c-fbform').hidden=true; }
-  catch(e){ if(e.code==='cancelled'){ out.textContent=e.text||''; } else if(e.code==='not_granted'||e.code==='sampling_disabled'||e.code==='not_declared'||e.code==='capability_disabled'){ $('#consigliere').hidden=true; } else if(e.code==='rate_limited'){ note.textContent='Troppe richieste o limite di utilizzo raggiunto: riprova tra poco.'; out.textContent=e.text||''; } else if(e.code==='refused'){ out.textContent=''; note.textContent='Domanda non accettata: riformulala.'; } else { out.textContent=e.text||''; note.textContent='Risposta interrotta: riprova.'; } }
-  finally{ $('#c-ask').disabled=false; $('#c-stop').hidden=true; cctl=null; } }
-$('#c-ok').onclick=()=>{ $('#c-fb').hidden=true; toast('Grazie: nessuna lezione da aggiungere.'); };
-$('#c-ko').onclick=()=>{ $('#c-fbform').hidden=false; $('#c-fbtext').focus(); };
-$('#c-fbno').onclick=()=>{ $('#c-fbform').hidden=true; };
-$('#c-fbok').onclick=async()=>{ const t=$('#c-fbtext').value.trim(); if(!t){ toast('Scrivi la correzione.'); return; } await addLez('consigliere', t, {ricetta:R.nome||'', domanda:(LASTQ&&LASTQ.q||'').slice(0,200), risposta:(LASTQ&&LASTQ.a||'').slice(0,400)}); $('#c-fbtext').value=''; $('#c-fbform').hidden=true; $('#c-fb').hidden=true; };
-$('#c-ask').onclick=()=>ask($('#c-q').value);
-$('#c-q').addEventListener('keydown',e=>{ if(e.key==='Enter') ask($('#c-q').value); });
-$('#c-stop').onclick=()=>cctl&&cctl.abort();
-document.querySelectorAll('#consigliere .chip').forEach(b=>b.onclick=()=>{ $('#c-q').value=b.dataset.q; ask(b.dataset.q); });
+async function copiaPerClaude(e){ if(e){ e.preventDefault(); e.stopPropagation(); } const t=contesto()+C_DOMANDA, out=$('#c-out');
+  let ok=false; try{ await navigator.clipboard.writeText(t); ok=true; }catch(e){ try{ const ta=document.createElement('textarea'); ta.value=t; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); ok=document.execCommand('copy'); ta.remove(); }catch(e2){} }
+  if(ok){ out.hidden=true; out.innerHTML=''; toast('Copiato: incollalo intero in una chat con Claude'); }
+  else { out.hidden=false; out.innerHTML=''; const ta=document.createElement('textarea'); ta.readOnly=true; ta.value=t; ta.style.cssText='width:100%;min-height:180px;font:inherit;font-size:.8rem'; out.appendChild(ta); ta.focus(); ta.select(); toast('Copia non riuscita: copia a mano il testo selezionato'); } }
+$('#c-ask').onclick=copiaPerClaude;
 
 // ---------- guida ----------
 function renderGuida(q){ q=(q||'').trim().toLowerCase(); const el=$('#guida'); el.innerHTML='';
